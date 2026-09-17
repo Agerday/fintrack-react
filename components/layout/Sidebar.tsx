@@ -1,23 +1,28 @@
-'use client'
+'use client';
 
-import Link from "next/link";
-import {usePathname} from "next/navigation";
-import {FileText, LayoutDashboard, Settings, Users,} from "lucide-react";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FileText, LayoutDashboard, Palette, Settings, Users } from 'lucide-react';
 
 const navigation = [
     {
-        label: "Dashboard",
-        href: "/",
+        label: 'App Catalogue',
+        href: '/style-guide',
+        icon: Palette,
+    },
+    {
+        label: 'Dashboard',
+        href: '/',
         icon: LayoutDashboard,
     },
     {
-        label: "Invoices",
-        href: "/invoices",
+        label: 'Invoices',
+        href: '/invoices',
         icon: FileText,
     },
     {
-        label: "Clients",
-        href: "/clients",
+        label: 'Clients',
+        href: '/clients',
         icon: Users,
     },
 ];
@@ -42,11 +47,11 @@ export function Sidebar() {
                             href={item.href}
                             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                                 active
-                                    ? "bg-slate-100 text-slate-900"
-                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                    ? 'bg-slate-100 text-slate-900'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                         >
-                            <Icon className="h-4 w-4"/>
+                            <Icon className="h-4 w-4" />
                             {item.label}
                         </Link>
                     );
@@ -58,7 +63,7 @@ export function Sidebar() {
                     href="/settings"
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
                 >
-                    <Settings className="h-4 w-4"/>
+                    <Settings className="h-4 w-4" />
                     Settings
                 </Link>
             </div>

@@ -46,6 +46,10 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    --color-status-paid: var(--status-paid);
+    --color-status-paid-foreground: var(--status-paid-foreground);
+    --color-status-pending: var(--status-pending);
+    --color-status-pending-foreground: var(--status-pending-foreground);
 }
 
 :root {
@@ -81,6 +85,10 @@
     --sidebar-ring: oklch(0.708 0 0);
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
+    --status-paid: oklch(0.62 0.14 155);
+    --status-paid-foreground: oklch(0.98 0 0);
+    --status-pending: oklch(0.78 0.15 85);
+    --status-pending-foreground: oklch(0.28 0.06 85);
 }
 
 .dark {
@@ -115,6 +123,10 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --status-paid: oklch(0.55 0.13 155);
+    --status-paid-foreground: oklch(0.98 0 0);
+    --status-pending: oklch(0.7 0.14 85);
+    --status-pending-foreground: oklch(0.15 0.03 85);
 }
 
 @layer base {

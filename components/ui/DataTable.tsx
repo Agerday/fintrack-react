@@ -8,11 +8,13 @@ import {
 } from '@/components/ui/table';
 
 export type Column<T> = {
-    key: keyof T;
-    header: string;
-    className?: string;
-    render?: (value: T[keyof T], row: T) => React.ReactNode;
-};
+    [K in keyof T]: {
+        key: K;
+        header: string;
+        className?: string;
+        render?: (value: T[K], row: T) => React.ReactNode;
+    };
+}[keyof T];
 
 type DataTableProps<T> = {
     data: T[];
