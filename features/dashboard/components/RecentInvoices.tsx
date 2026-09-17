@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import type { Invoice } from '@/features/invoices/types';
 import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge';
+import { formatCurrency } from '@/lib/formatters';
 
 type RecentInvoicesProps = {
     invoices: Pick<Invoice, 'id' | 'client' | 'amount' | 'status'>[];
@@ -34,7 +35,9 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
                         </div>
 
                         <div className="flex items-center gap-8">
-                            <span className="text-sm font-medium">{invoice.amount}</span>
+                            <span className="text-sm font-medium">
+                                {formatCurrency(invoice.amount)}
+                            </span>
                             <InvoiceStatusBadge status={invoice.status} />
                         </div>
                     </div>

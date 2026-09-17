@@ -3,5 +3,5 @@ export type Client = {
     name: string;
     email: string;
     invoices: number;
-    total: string;
+    total: number;
 };
