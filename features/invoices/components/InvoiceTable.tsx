@@ -3,7 +3,8 @@ import type { Invoice } from '../types';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency } from '@/lib/formatters';
-import { invoices } from '@/features/invoices/data';
+import { useInvoices } from '@/features/invoices/hooks';
+import { QueryState } from '@/components/shared/QueryState';
 
 const columns: Column<Invoice>[] = [
     {
@@ -31,5 +32,11 @@ const columns: Column<Invoice>[] = [
 ];
 
 export function InvoiceTable() {
-    return <DataTable columns={columns} data={invoices} />;
+    const { data: invoices = [], isPending, isError } = useInvoices();
+
+    return (
+        <QueryState isPending={isPending} isError={isError} isEmpty={!invoices.length}>
+            <DataTable columns={columns} data={invoices} />
+        </QueryState>
+    );
 }
