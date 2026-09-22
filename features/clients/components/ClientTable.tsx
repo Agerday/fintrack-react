@@ -1,3 +1,5 @@
+'use client';
+
 import { Client } from '@/features/clients/types';
 import { Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency } from '@/lib/formatters';
@@ -33,7 +35,7 @@ export function ClientTable() {
 
     return (
         <QueryState isPending={isLoading} isError={isError} isEmpty={!clients.length}>
-            <DataTable data={clients} columns={columns} />
+            <DataTable columns={columns} data={clients} />
         </QueryState>
     );
 }

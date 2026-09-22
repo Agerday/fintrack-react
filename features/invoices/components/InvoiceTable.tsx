@@ -1,3 +1,5 @@
+'use client';
+
 import type { Invoice } from '../types';
 
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';

@@ -1,4 +1,4 @@
-import { Client } from '@/features/clients/types';
+import type { Client } from './types';
 
 export const clients: Client[] = [
     {
