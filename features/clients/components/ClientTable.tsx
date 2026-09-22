@@ -31,10 +31,10 @@ const columns: Column<Client>[] = [
 ];
 
 export function ClientTable() {
-    const { data: clients = [], isLoading, isError } = useClients();
+    const { data: clients = [], isLoading, error } = useClients();
 
     return (
-        <QueryState isPending={isLoading} isError={isError} isEmpty={!clients.length}>
+        <QueryState isPending={isLoading} error={error} isEmpty={!clients.length}>
             <DataTable columns={columns} data={clients} />
         </QueryState>
     );

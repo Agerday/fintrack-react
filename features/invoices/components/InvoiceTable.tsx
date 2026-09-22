@@ -34,10 +34,10 @@ const columns: Column<Invoice>[] = [
 ];
 
 export function InvoiceTable() {
-    const { data: invoices = [], isPending, isError } = useInvoices();
+    const { data: invoices = [], isPending, error } = useInvoices();
 
     return (
-        <QueryState isPending={isPending} isError={isError} isEmpty={!invoices.length}>
+        <QueryState isPending={isPending} error={error} isEmpty={!invoices.length}>
             <DataTable columns={columns} data={invoices} />
         </QueryState>
     );

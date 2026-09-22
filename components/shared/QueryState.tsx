@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
+import { ApiError } from '@/lib/api-error';
+import { ErrorMessage } from '@/lib/errors';
 
 type QueryStateProps = {
     isPending: boolean;
-    isError: boolean;
+    error?: Error | null;
     isEmpty?: boolean;
     emptyMessage?: string;
     children: ReactNode;
@@ -10,13 +12,16 @@ type QueryStateProps = {
 
 export function QueryState({
     isPending,
-    isError,
+    error,
     isEmpty,
     emptyMessage = 'No data found',
     children,
 }: QueryStateProps) {
     if (isPending) return <div>Loading...</div>;
-    if (isError) return <div>Something went wrong</div>;
+    if (error) {
+        const message = error instanceof ApiError ? ErrorMessage[error.code] : error.message;
+        return <div>{message}</div>;
+    }
     if (isEmpty) return <div>{emptyMessage}</div>;
 
     return <>{children}</>;

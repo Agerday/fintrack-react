@@ -21,11 +21,11 @@ const stats: StatCardProps[] = [
 ];
 
 export default function DashboardPage() {
-    const { data: invoices = [], isLoading, isError } = useInvoices();
+    const { data: invoices = [], isLoading, error } = useInvoices();
     const recentInvoices = invoices.slice(-5).reverse();
 
     return (
-        <QueryState isPending={isLoading} isError={isError}>
+        <QueryState isPending={isLoading} error={error}>
             <div className="space-y-8">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
