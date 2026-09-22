@@ -1,37 +1,8 @@
 import { Client } from '@/features/clients/types';
 import { Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency } from '@/lib/formatters';
-
-const clients: Client[] = [
-    {
-        id: '1',
-        name: 'Acme Corporation',
-        email: 'billing@acme.com',
-        invoices: 12,
-        total: 18400,
-    },
-    {
-        id: '2',
-        name: 'Globex Inc.',
-        email: 'finance@globex.com',
-        invoices: 8,
-        total: 11250,
-    },
-    {
-        id: '3',
-        name: 'Soylent Corp.',
-        email: 'accounts@soylent.com',
-        invoices: 6,
-        total: 9800,
-    },
-    {
-        id: '4',
-        name: 'Initech',
-        email: 'billing@initech.com',
-        invoices: 4,
-        total: 4200,
-    },
-];
+import { QueryState } from '@/components/shared/QueryState';
+import { useClients } from '@/features/clients/hooks';
 
 const columns: Column<Client>[] = [
     {
@@ -58,5 +29,11 @@ const columns: Column<Client>[] = [
 ];
 
 export function ClientTable() {
-    return <DataTable data={clients} columns={columns} />;
+    const { data: clients = [], isLoading, isError } = useClients();
+
+    return (
+        <QueryState isPending={isLoading} isError={isError} isEmpty={!clients.length}>
+            <DataTable data={clients} columns={columns} />
+        </QueryState>
+    );
 }
