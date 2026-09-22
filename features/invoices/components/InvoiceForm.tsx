@@ -7,20 +7,27 @@ import { Button } from '@/components/ui/button';
 import { useCreateInvoice } from '@/features/invoices/hooks';
 import { ErrorMessage } from '@/lib/errors';
 import { ApiError } from '@/lib/api-error';
+import { formatAmount } from '@/lib/formatters';
 
-export function InvoiceForm() {
+type InvoiceFormProps = {
+    onSuccess?: () => void;
+};
+export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
     const [client, setClient] = useState('');
     const [amount, setAmount] = useState('');
     const { mutate, isPending, error } = useCreateInvoice();
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        mutate({
-            client,
-            date: new Date().toISOString(),
-            amount: Number(amount),
-            status: 'pending',
-        });
+        mutate(
+            {
+                client,
+                date: new Date().toISOString(),
+                amount: Number(amount),
+                status: 'pending',
+            },
+            { onSuccess },
+        );
     }
 
     const errorMessage = error instanceof ApiError ? ErrorMessage[error.code] : error?.message;
@@ -45,9 +52,21 @@ export function InvoiceForm() {
                     </span>
                     <Input
                         id="amount"
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+
+                            if (/^\d*\.?\d*$/.test(value)) {
+                                setAmount(value);
+                            }
+                        }}
+                        onBlur={() => {
+                            if (amount !== '') {
+                                setAmount(formatAmount(amount));
+                            }
+                        }}
                         placeholder="0.00"
                         className="pl-6"
                         required

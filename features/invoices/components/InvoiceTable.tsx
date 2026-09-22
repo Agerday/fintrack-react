@@ -4,7 +4,7 @@ import type { Invoice } from '../types';
 
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { Column, DataTable } from '@/components/ui/DataTable';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { useInvoices } from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
 
@@ -20,6 +20,7 @@ const columns: Column<Invoice>[] = [
     {
         key: 'date',
         header: 'Date',
+        render: (value) => formatDate(value),
     },
     {
         key: 'amount',

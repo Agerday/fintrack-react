@@ -1,8 +1,14 @@
-export function formatCurrency(amountCents: number): string {
+export function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-    }).format(amountCents / 100);
+    }).format(amount);
+}
+
+export function formatAmount(amount: string | number): string {
+    if (amount === '') return '';
+
+    return Number(amount).toFixed(2);
 }
 
 export function formatDate(isoString: string): string {
