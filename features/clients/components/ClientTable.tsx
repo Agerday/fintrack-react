@@ -35,7 +35,9 @@ export function ClientTable() {
 
     return (
         <QueryState isPending={isLoading} error={error} isEmpty={!clients.length}>
-            <DataTable columns={columns} data={clients} />
+            <div className="rounded-xl border bg-card card-elevated">
+                <DataTable columns={columns} data={clients} />
+            </div>
         </QueryState>
     );
 }
