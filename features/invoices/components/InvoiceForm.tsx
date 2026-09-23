@@ -12,6 +12,7 @@ import { formatAmount } from '@/lib/formatters';
 type InvoiceFormProps = {
     onSuccess?: () => void;
 };
+
 export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
     const [client, setClient] = useState('');
     const [amount, setAmount] = useState('');

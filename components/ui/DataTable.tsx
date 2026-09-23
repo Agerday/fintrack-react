@@ -20,11 +20,10 @@ export type Column<T> = {
 type DataTableProps<T> = {
     data: T[];
     columns: Column<T>[];
-    clickableId?: keyof T;
     renderActions?: (row: T) => React.ReactNode;
 };
 
-export function DataTable<T>({ data, columns, clickableId, renderActions }: DataTableProps<T>) {
+export function DataTable<T>({ data, columns, renderActions }: DataTableProps<T>) {
     return (
         <div className="fintrack-table-wrapper">
             <Table className="fintrack-table table-fixed">

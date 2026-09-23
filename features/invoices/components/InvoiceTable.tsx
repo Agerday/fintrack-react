@@ -8,11 +8,17 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { useDeleteInvoice, useInvoices, useUpdateInvoice } from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const columns: Column<Invoice>[] = [
     {
         key: 'id',
         header: 'Invoice',
+        render: (value) => (
+            <Link href={`/invoices/${value}`} className="text-primary hover:underline">
+                {value}
+            </Link>
+        ),
     },
     {
         key: 'client',
