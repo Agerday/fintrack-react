@@ -9,6 +9,8 @@ export function getInvoice(id: string) {
     return apiClient<Invoice>(`/invoices/${id}`);
 }
 
+//Omit here only to exclude one specific field like ID.
+//If more fields, just use the zod Schema
 export function createInvoice(data: Omit<Invoice, 'id'>) {
     return apiClient<Invoice>('/invoices', {
         method: 'POST',

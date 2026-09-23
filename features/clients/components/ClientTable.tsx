@@ -20,6 +20,14 @@ const columns: Column<Client>[] = [
         header: 'Email',
     },
     {
+        key: 'phone',
+        header: 'Phone',
+    },
+    {
+        key: 'company',
+        header: 'Company',
+    },
+    {
         key: 'invoices',
         header: 'Invoices',
     },

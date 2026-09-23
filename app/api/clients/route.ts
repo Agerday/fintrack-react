@@ -9,9 +9,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const body = await request.json();
-    console.log(body);
-    const newClient: Client = { id: `INV-${Date.now()}`, ...body };
-    console.log(newClient);
+    const newClient: Client = { id: `INV-${Date.now()}`, ...body, invoices: 0, total: 0 };
 
     clientStore.clients = [...clientStore.clients, newClient];
 
