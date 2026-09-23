@@ -6,6 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import React from 'react';
 
 export type Column<T> = {
     [K in keyof T]: {
@@ -19,9 +20,11 @@ export type Column<T> = {
 type DataTableProps<T> = {
     data: T[];
     columns: Column<T>[];
+    clickableId?: keyof T;
+    renderActions?: (row: T) => React.ReactNode;
 };
 
-export function DataTable<T>({ data, columns }: DataTableProps<T>) {
+export function DataTable<T>({ data, columns, clickableId, renderActions }: DataTableProps<T>) {
     return (
         <div className="fintrack-table-wrapper">
             <Table className="fintrack-table table-fixed">
@@ -32,6 +35,7 @@ export function DataTable<T>({ data, columns }: DataTableProps<T>) {
                                 {column.header}
                             </TableHead>
                         ))}
+                        {renderActions && <TableHead className="w-0">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
 
@@ -50,6 +54,7 @@ export function DataTable<T>({ data, columns }: DataTableProps<T>) {
                                     </TableCell>
                                 );
                             })}
+                            {renderActions && <TableCell>{renderActions(row)}</TableCell>}
                         </TableRow>
                     ))}
                 </TableBody>
