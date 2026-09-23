@@ -48,33 +48,34 @@ export function InvoiceTable() {
 
     return (
         <QueryState isPending={isPending} error={error} isEmpty={!invoices.length}>
-            <DataTable
-                columns={columns}
-                data={invoices}
-                renderActions={(invoice) => (
-                    <div className="flex gap-2">
-                        {invoice.status !== 'paid' && (
+            <div className="rounded-xl border bg-card card-elevated">
+                <DataTable
+                    columns={columns}
+                    data={invoices}
+                    renderActions={(invoice) => (
+                        <div className="flex gap-2">
+                            {invoice.status !== 'paid' && (
+                                <Button
+                                    size={'sm'}
+                                    variant={'outline'}
+                                    onClick={() =>
+                                        markAsPaid({ id: invoice.id, data: { status: 'paid' } })
+                                    }
+                                >
+                                    Mark As Paid
+                                </Button>
+                            )}
                             <Button
                                 size={'sm'}
-                                variant={'outline'}
-                                onClick={() =>
-                                    markAsPaid({ id: invoice.id, data: { status: 'paid' } })
-                                }
+                                variant={'destructive'}
+                                onClick={() => deleteInvoice(invoice.id)}
                             >
-                                Mark As Paid
+                                X
                             </Button>
-                        )}
-                        <Button
-                            size={'sm'}
-                            variant={'destructive'}
-                            onClick={() => deleteInvoice(invoice.id)}
-                        >
-                            {' '}
-                            X
-                        </Button>
-                    </div>
-                )}
-            />
+                        </div>
+                    )}
+                />
+            </div>
         </QueryState>
     );
 }

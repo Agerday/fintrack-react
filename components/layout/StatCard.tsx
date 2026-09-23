@@ -20,7 +20,7 @@ export function StatCard({
         valueType === 'currency' ? formatCurrency(value) : value.toLocaleString('en-US');
 
     return (
-        <div className="rounded-xl border bg-white p-6">
+        <div className="card-elevated rounded-xl border bg-card p-6">
             <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-500">{label}</p>
 
