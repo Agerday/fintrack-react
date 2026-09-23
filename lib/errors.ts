@@ -1,5 +1,6 @@
 export const ErrorCode = {
     BAD_REQUEST: 'BAD_REQUEST',
+    CONFLICT: 'CONFLICT',
     NOT_FOUND: 'NOT_FOUND',
     UNAUTHORIZED: 'UNAUTHORIZED',
     SERVER_ERROR: 'SERVER_ERROR',
@@ -8,10 +9,21 @@ export const ErrorCode = {
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
-export const ErrorMessage: Record<ErrorCode, string> = {
-    BAD_REQUEST: 'Please check the form and try again.',
-    NOT_FOUND: 'The requested resource was not found.',
-    UNAUTHORIZED: 'You are not authorized to do this.',
-    SERVER_ERROR: 'Something went wrong on our end.',
-    UNKNOWN: 'An unexpected error occurred.',
-};
+export function getErrorMessage(code: ErrorCode, detail?: string): string {
+    switch (code) {
+        case ErrorCode.BAD_REQUEST:
+            return 'Please check the form and try again.';
+        case ErrorCode.CONFLICT:
+            return detail
+                ? `This ${detail} is already registered.`
+                : 'This value is already registered.';
+        case ErrorCode.NOT_FOUND:
+            return 'The requested resource was not found.';
+        case ErrorCode.UNAUTHORIZED:
+            return 'You are not authorized to do this.';
+        case ErrorCode.SERVER_ERROR:
+            return 'Something went wrong on our end.';
+        default:
+            return 'An unexpected error occurred.';
+    }
+}

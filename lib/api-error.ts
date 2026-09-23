@@ -1,13 +1,15 @@
-import { ErrorCode, ErrorMessage } from './errors';
+import { ErrorCode, getErrorMessage } from './errors';
 
 export class ApiError extends Error {
     code: ErrorCode;
     status: number;
+    field?: string;
 
-    constructor(status: number, code: ErrorCode) {
-        super(ErrorMessage[code]);
+    constructor(status: number, code: ErrorCode, field?: string) {
+        super(getErrorMessage(code, field));
         this.status = status;
         this.code = code;
+        this.field = field;
     }
 }
 
@@ -19,6 +21,8 @@ export function mapStatusToErrorCode(status: number): ErrorCode {
             return ErrorCode.UNAUTHORIZED;
         case 404:
             return ErrorCode.NOT_FOUND;
+        case 409:
+            return ErrorCode.CONFLICT;
         case 500:
             return ErrorCode.SERVER_ERROR;
         default:

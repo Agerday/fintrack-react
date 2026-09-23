@@ -13,3 +13,9 @@ export function createClient(data: ClientFormValues) {
         body: JSON.stringify(data),
     });
 }
+
+export function checkEmailExists(email: string) {
+    return apiClient<{ exists: boolean }>(
+        `/clients/check-email?email=${encodeURIComponent(email)}`,
+    );
+}
