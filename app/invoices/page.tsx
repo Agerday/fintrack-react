@@ -11,10 +11,22 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { InvoiceForm } from '@/features/invoices/components/InvoiceForm';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function InvoicesPage() {
     const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === 'n' && !event.metaKey && !event.ctrlKey) {
+                event.preventDefault();
+                setOpen(true);
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -23,7 +35,7 @@ export default function InvoicesPage() {
                 description="Manage and track your invoices."
                 action={
                     <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger render={<Button> Create Invoice </Button>} />
+                        <DialogTrigger render={<Button> Create Invoice (N)</Button>} />
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Create invoice</DialogTitle>
