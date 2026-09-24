@@ -54,6 +54,13 @@ export function InvoiceTable() {
                     data={invoices}
                     renderActions={(invoice) => (
                         <div className="flex gap-2">
+                            <Button
+                                size={'sm'}
+                                variant={'destructive'}
+                                onClick={() => deleteInvoice(invoice.id)}
+                            >
+                                X
+                            </Button>
                             {invoice.status !== 'paid' && (
                                 <Button
                                     size={'sm'}
@@ -65,13 +72,6 @@ export function InvoiceTable() {
                                     Mark As Paid
                                 </Button>
                             )}
-                            <Button
-                                size={'sm'}
-                                variant={'destructive'}
-                                onClick={() => deleteInvoice(invoice.id)}
-                            >
-                                X
-                            </Button>
                         </div>
                     )}
                 />

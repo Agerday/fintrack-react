@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server';
 import { Client } from '@/features/clients/types';
 import { clientStore } from '@/app/api/clients/store';
 import { countries } from '@/features/clients/countries';
+import { validateBody } from '@/lib/validate-body';
+import { clientSchema } from '@/features/clients/schema';
 
 export async function GET() {
     return NextResponse.json(clientStore.clients);
 }
 
 export async function POST(request: Request) {
-    const body = await request.json();
+    const { data: body, errorResponse } = await validateBody(request, clientSchema);
+    if (errorResponse) return errorResponse;
 
     const emailExists = clientStore.clients.some(
         (client) => client.email.toLowerCase() === body.email.toLowerCase(),
