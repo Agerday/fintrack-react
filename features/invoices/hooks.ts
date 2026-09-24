@@ -43,7 +43,7 @@ export function useUpdateInvoice() {
             void queryClient.invalidateQueries({ queryKey: ['invoices'] });
         },
         onError: (error) => {
-            console.error('Failed to delete invoice:', error);
+            console.error('Failed to update invoice:', error);
         },
     });
 }

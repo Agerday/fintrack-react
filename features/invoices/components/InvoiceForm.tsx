@@ -3,9 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useCreateInvoice } from '@/features/invoices/hooks';
-import { ApiError } from '@/lib/api-error';
 import { formatAmount } from '@/lib/formatters';
-import { getErrorMessage } from '@/lib/errors';
 
 type InvoiceFormProps = {
     onSuccess?: () => void;
@@ -29,8 +27,7 @@ export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
         );
     }
 
-    const errorMessage =
-        error instanceof ApiError ? getErrorMessage(error.code, error.field) : error?.message;
+    const errorMessage = error?.message;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>

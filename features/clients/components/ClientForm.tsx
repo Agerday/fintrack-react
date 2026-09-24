@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api-error';
-import { ErrorCode, getErrorMessage } from '@/lib/errors';
 import {
     Select,
     SelectContent,
@@ -52,9 +51,7 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
     }
 
     const globalErrorMessage =
-        error instanceof ApiError && error.code !== ErrorCode.CONFLICT
-            ? getErrorMessage(error.code, error.field)
-            : undefined;
+        error instanceof ApiError && !error.field ? error.message : undefined;
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>

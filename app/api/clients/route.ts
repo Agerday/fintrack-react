@@ -23,7 +23,7 @@ export const POST = withErrorHandling(async (request: Request) => {
     const phone = `${country?.dialCode ?? ''} ${data.phone}`;
 
     const newClient: Client = {
-        id: `INV-${Date.now()}`,
+        id: `CLI-${Date.now()}`,
         name: data.name,
         email: data.email,
         phone,

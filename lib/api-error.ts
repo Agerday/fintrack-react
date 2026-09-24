@@ -5,8 +5,10 @@ export class ApiError extends Error {
     status: number;
     field?: string;
 
-    constructor(status: number, code: ErrorCode, field?: string) {
-        super(getErrorMessage(code, field));
+    constructor(status: number, code: ErrorCode, field?: string, serverMessage?: string) {
+        // field validation errors (400) keep the precise server message, everything else uses our the mapping
+        const useServerMessage = code === ErrorCode.BAD_REQUEST && field && serverMessage;
+        super(useServerMessage ? serverMessage : getErrorMessage(code, field));
         this.status = status;
         this.code = code;
         this.field = field;

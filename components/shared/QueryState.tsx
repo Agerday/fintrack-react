@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react';
-import { ApiError } from '@/lib/api-error';
-import { getErrorMessage } from '@/lib/errors';
 
 type QueryStateProps = {
     isPending: boolean;
@@ -18,11 +16,7 @@ export function QueryState({
     children,
 }: QueryStateProps) {
     if (isPending) return <div>Loading...</div>;
-    if (error) {
-        const message =
-            error instanceof ApiError ? getErrorMessage(error.code, error.field) : error.message;
-        return <div>{message}</div>;
-    }
+    if (error) return <div>{error.message}</div>;
     if (isEmpty) return <div>{emptyMessage}</div>;
 
     return <>{children}</>;

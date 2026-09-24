@@ -1,5 +1,5 @@
-import { invoiceStatusSchema } from '@/features/invoices/schema';
-import { z } from 'zod';
+import type { invoiceStatusSchema } from '@/features/invoices/schema';
+import type { z } from 'zod';
 
 export type InvoiceStatus = z.infer<typeof invoiceStatusSchema>;
 

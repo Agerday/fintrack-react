@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { HttpError } from './http-error';
 
-// Wraps a route handler: maps HttpError to a JSON response and any unexpected error to a 500 (like @ControllerAdvice)
+// wraps a route handler: maps HttpError to a JSON response and any unexpected error to a 500 (like @ControllerAdvice)
 export function withErrorHandling<A extends unknown[]>(handler: (...args: A) => Promise<Response>) {
     return async (...args: A) => {
         try {
