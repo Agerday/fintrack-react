@@ -2,19 +2,19 @@ import { NextResponse } from 'next/server';
 import { Client } from '@/features/clients/types';
 import { clientStore } from '@/app/api/clients/store';
 import { countries } from '@/features/clients/countries';
-import { validateBody } from '@/lib/validate-body';
 import { clientSchema } from '@/features/clients/schema';
+import { withErrorHandling } from '@/lib/with-error-handling';
+import { parseBody } from '@/lib/parse-body';
 
 export async function GET() {
     return NextResponse.json(clientStore.clients);
 }
 
-export async function POST(request: Request) {
-    const { data: body, errorResponse } = await validateBody(request, clientSchema);
-    if (errorResponse) return errorResponse;
+export const POST = withErrorHandling(async (request: Request) => {
+    const data = await parseBody(request, clientSchema);
 
     const emailExists = clientStore.clients.some(
-        (client) => client.email.toLowerCase() === body.email.toLowerCase(),
+        (client) => client.email.toLowerCase() === data.email.toLowerCase(),
     );
 
     if (emailExists) {
@@ -24,15 +24,15 @@ export async function POST(request: Request) {
         );
     }
 
-    const country = countries.find((c) => c.code === body.countryCode);
-    const phone = `${country?.dialCode ?? ''} ${body.phone}`;
+    const country = countries.find((c) => c.code === data.countryCode);
+    const phone = `${country?.dialCode ?? ''} ${data.phone}`;
 
     const newClient: Client = {
         id: `INV-${Date.now()}`,
-        name: body.name,
-        email: body.email,
+        name: data.name,
+        email: data.email,
         phone,
-        company: body.company,
+        company: data.company,
         invoices: 0,
         total: 0,
     };
@@ -40,4 +40,4 @@ export async function POST(request: Request) {
     clientStore.clients = [...clientStore.clients, newClient];
 
     return NextResponse.json(clientStore.clients, { status: 201 });
-}
+});

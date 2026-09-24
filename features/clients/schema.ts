@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { countries } from '@/features/clients/countries';
+import { countries, CountryCode } from '@/features/clients/countries';
 
-const countryCodes = countries.map((c) => c.code) as [string, ...string[]];
+const countryCodes = countries.map((c) => c.code) as [CountryCode, ...CountryCode[]];
 
 export const clientSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),

@@ -1,4 +1,7 @@
-export type InvoiceStatus = 'paid' | 'pending' | 'overdue';
+import { invoiceStatusSchema } from '@/features/invoices/schema';
+import { z } from 'zod';
+
+export type InvoiceStatus = z.infer<typeof invoiceStatusSchema>;
 
 export type Invoice = {
     id: string;
