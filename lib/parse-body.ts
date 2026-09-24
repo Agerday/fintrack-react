@@ -16,7 +16,8 @@ export async function parseBody<T extends z.ZodType>(
     const result = schema.safeParse(body);
     if (!result.success) {
         const issue = result.error.issues[0];
-        throw new HttpError(400, issue.message, String(issue.path[0]));
+        const field = issue.path[0];
+        throw new HttpError(400, issue.message, field === undefined ? undefined : String(field));
     }
 
     return result.data;

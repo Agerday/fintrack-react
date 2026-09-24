@@ -12,10 +12,6 @@ export async function GET() {
 export const POST = withErrorHandling(async (request: Request) => {
     const data = await parseBody(request, invoiceSchema);
 
-    if (!data.client) {
-        return NextResponse.json({ message: 'Client is required' }, { status: 400 });
-    }
-
     const newInvoice: Invoice = { id: `INV-${Date.now()}`, ...data };
 
     // create new array with new invoice and existing one

@@ -5,6 +5,7 @@ import { countries } from '@/features/clients/countries';
 import { clientSchema } from '@/features/clients/schema';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { parseBody } from '@/lib/parse-body';
+import { HttpError } from '@/lib/http-error';
 
 export async function GET() {
     return NextResponse.json(clientStore.clients);
@@ -16,13 +17,7 @@ export const POST = withErrorHandling(async (request: Request) => {
     const emailExists = clientStore.clients.some(
         (client) => client.email.toLowerCase() === data.email.toLowerCase(),
     );
-
-    if (emailExists) {
-        return NextResponse.json(
-            { message: 'Email already exists', field: 'email' },
-            { status: 409 },
-        );
-    }
+    if (emailExists) throw new HttpError(409, 'Email already exists', 'email');
 
     const country = countries.find((c) => c.code === data.countryCode);
     const phone = `${country?.dialCode ?? ''} ${data.phone}`;
