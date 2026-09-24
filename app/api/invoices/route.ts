@@ -12,7 +12,12 @@ export async function GET() {
 export const POST = withErrorHandling(async (request: Request) => {
     const data = await parseBody(request, invoiceSchema);
 
-    const newInvoice: Invoice = { id: `INV-${Date.now()}`, ...data };
+    const newInvoice: Invoice = {
+        id: `INV-${Date.now()}`,
+        ...data,
+        date: new Date().toISOString(),
+        status: 'pending',
+    };
 
     // create new array with new invoice and existing one
     // .push() mutates the existing array

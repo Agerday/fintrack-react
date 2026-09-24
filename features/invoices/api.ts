@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api-client';
 import type { Invoice } from './types';
+import { InvoiceFormValues, InvoiceFormUpdateValues } from '@/features/invoices/schema';
 
 export function getInvoices() {
     return apiClient<Invoice[]>('/invoices');
@@ -9,9 +10,7 @@ export function getInvoice(id: string) {
     return apiClient<Invoice>(`/invoices/${id}`);
 }
 
-//Omit here only to exclude one specific field like ID.
-//If more fields, just use the zod Schema
-export function createInvoice(data: Omit<Invoice, 'id'>) {
+export function createInvoice(data: InvoiceFormValues) {
     return apiClient<Invoice>('/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -19,7 +18,7 @@ export function createInvoice(data: Omit<Invoice, 'id'>) {
     });
 }
 
-export function updateInvoice(id: string, data: Partial<Invoice>) {
+export function updateInvoice(id: string, data: InvoiceFormUpdateValues) {
     return apiClient<Invoice>(`/invoices/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

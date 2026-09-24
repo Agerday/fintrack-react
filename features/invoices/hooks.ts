@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createInvoice, deleteInvoice, getInvoice, getInvoices, updateInvoice } from './api';
-import { Invoice } from '@/features/invoices/types';
+import { InvoiceFormUpdateValues } from '@/features/invoices/schema';
 
 export function useInvoices() {
     //Here is only reading (useQuery)
@@ -36,7 +36,7 @@ export function useUpdateInvoice() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: Partial<Invoice> }) =>
+        mutationFn: ({ id, data }: { id: string; data: InvoiceFormUpdateValues }) =>
             updateInvoice(id, data),
         onSuccess: () => {
             //same here we refresh after deleting

@@ -5,12 +5,11 @@ export const invoiceStatusSchema = z.enum(invoiceStatuses);
 
 export const invoiceSchema = z.object({
     client: z.string().trim().min(1, 'Client is required'),
-    amount: z.number().positive('Amount must be greater than 0'),
-    date: z.iso.datetime(),
-    status: invoiceStatusSchema,
+    amount: z.number({ error: 'Amount is required' }).positive('Amount must be greater than 0'),
 });
 
-export const invoiceUpdateSchema = invoiceSchema.partial();
+// PATCH: use extend to have any field of the invoice, including status, every field optional
+export const invoiceUpdateSchema = invoiceSchema.extend({ status: invoiceStatusSchema }).partial();
 
-export type InvoiceInput = z.infer<typeof invoiceSchema>;
-export type InvoiceUpdateInput = z.infer<typeof invoiceUpdateSchema>;
+export type InvoiceFormValues = z.infer<typeof invoiceSchema>;
+export type InvoiceFormUpdateValues = z.infer<typeof invoiceUpdateSchema>;

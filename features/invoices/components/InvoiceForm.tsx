@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useCreateInvoice } from '@/features/invoices/hooks';
+import { InvoiceFormValues, invoiceSchema } from '@/features/invoices/schema';
+import { ApiError } from '@/lib/api-error';
 import { formatAmount } from '@/lib/formatters';
 
 type InvoiceFormProps = {
@@ -10,37 +13,41 @@ type InvoiceFormProps = {
 };
 
 export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
-    const [client, setClient] = useState('');
-    const [amount, setAmount] = useState('');
+    const {
+        register,
+        handleSubmit,
+        setError,
+        formState: { errors },
+    } = useForm<InvoiceFormValues>({
+        resolver: zodResolver(invoiceSchema),
+    });
+
     const { mutate, isPending, error } = useCreateInvoice();
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        mutate(
-            {
-                client,
-                date: new Date().toISOString(),
-                amount: Number(amount),
-                status: 'pending',
+    function onSubmit(data: InvoiceFormValues) {
+        mutate(data, {
+            onSuccess,
+            onError: (err) => {
+                if (err instanceof ApiError && err.field) {
+                    setError(err.field as keyof InvoiceFormValues, { message: err.message });
+                }
             },
-            { onSuccess },
-        );
+        });
     }
 
-    const errorMessage = error?.message;
+    const globalErrorMessage =
+        error instanceof ApiError && !error.field ? error.message : undefined;
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="space-y-1.5">
                 <Label htmlFor="client">Client</Label>
-                <Input
-                    id="client"
-                    value={client}
-                    onChange={(e) => setClient(e.target.value)}
-                    placeholder="Acme Corporation"
-                    required
-                />
+                <Input id="client" {...register('client')} placeholder="Acme Corporation" />
+                {errors.client && (
+                    <p className="text-sm text-destructive">{errors.client.message}</p>
+                )}
             </div>
+
             <div className="space-y-1.5">
                 <Label htmlFor="amount">Amount</Label>
                 <div className="relative">
@@ -49,32 +56,31 @@ export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
                     </span>
                     <Input
                         id="amount"
-                        type="text"
+                        type="number"
                         inputMode="decimal"
-                        value={amount}
-                        onChange={(e) => {
-                            const value = e.target.value;
-
-                            if (/^\d*\.?\d*$/.test(value)) {
-                                setAmount(value);
-                            }
-                        }}
-                        onBlur={() => {
-                            if (amount !== '') {
-                                setAmount(formatAmount(amount));
-                            }
-                        }}
+                        step="0.01"
+                        min="0"
+                        {...register('amount', {
+                            valueAsNumber: true,
+                            onBlur: (e) => {
+                                if (e.target.value) e.target.value = formatAmount(e.target.value);
+                            },
+                        })}
                         placeholder="0.00"
                         className="pl-6"
-                        required
                     />
                 </div>
+                {errors.amount && (
+                    <p className="text-sm text-destructive">{errors.amount.message}</p>
+                )}
             </div>
-            {errorMessage && (
+
+            {globalErrorMessage && (
                 <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {errorMessage}
+                    {globalErrorMessage}
                 </p>
             )}
+
             <Button type="submit" disabled={isPending} className="w-full">
                 {isPending ? 'Creating...' : 'Create invoice'}
             </Button>
