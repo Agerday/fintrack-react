@@ -5,7 +5,12 @@ import type { Invoice } from '../types';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { useDeleteInvoice, useInvoices, useUpdateInvoice } from '@/features/invoices/hooks';
+import {
+    useDeleteInvoice,
+    useInvoiceEvents,
+    useInvoices,
+    useUpdateInvoice,
+} from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -43,6 +48,7 @@ const columns: Column<Invoice>[] = [
 
 export function InvoiceTable() {
     const { data: invoices = [], isPending, error } = useInvoices();
+    useInvoiceEvents();
     const { mutate: markAsPaid } = useUpdateInvoice();
     const { mutate: deleteInvoice } = useDeleteInvoice();
 

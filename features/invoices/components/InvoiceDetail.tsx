@@ -2,7 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
-import { useDeleteInvoice, useInvoice, useUpdateInvoice } from '@/features/invoices/hooks';
+import {
+    useDeleteInvoice,
+    useInvoice,
+    useInvoiceEvents,
+    useUpdateInvoice,
+} from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -14,6 +19,7 @@ type InvoiceDetailProps = {
 export function InvoiceDetail({ id }: InvoiceDetailProps) {
     const router = useRouter();
     const { data: invoice, isPending, error } = useInvoice(id);
+    useInvoiceEvents();
     const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
     const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
 

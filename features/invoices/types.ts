@@ -10,3 +10,10 @@ export type Invoice = {
     amount: number;
     status: InvoiceStatus;
 };
+
+// Messages pushed by the WebSocket server (server/ws.ts). Kept minimal on purpose:
+// they only tell the client what changed, the client refetches the data through the API
+export type InvoiceEvent = {
+    type: 'invoice.created' | 'invoice.updated' | 'invoice.deleted';
+    id: string;
+};
