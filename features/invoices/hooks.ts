@@ -38,9 +38,10 @@ export function useUpdateInvoice() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: InvoiceFormUpdateValues }) =>
             updateInvoice(id, data),
-        onSuccess: () => {
-            //same here we refresh after deleting
+        onSuccess: (_data, { id }) => {
+            //same here we refresh after updating, the list and the detail page
             void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            void queryClient.invalidateQueries({ queryKey: ['invoice', id] });
         },
         onError: (error) => {
             console.error('Failed to update invoice:', error);
@@ -53,7 +54,9 @@ export function useDeleteInvoice() {
 
     return useMutation({
         mutationFn: (id: string) => deleteInvoice(id),
-        onSuccess: () => {
+        onSuccess: (_data, id) => {
+            // the invoice no longer exists, drop its cache instead of refetching a 404
+            queryClient.removeQueries({ queryKey: ['invoice', id] });
             void queryClient.invalidateQueries({ queryKey: ['invoices'] });
         },
         onError: (error) => {

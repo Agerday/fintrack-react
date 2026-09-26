@@ -5,6 +5,14 @@ import { withErrorHandling } from '@/lib/with-error-handling';
 import { findOrThrow } from '@/lib/find-or-throw';
 import { parseBody } from '@/lib/parse-body';
 
+export const GET = withErrorHandling(
+    async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
+        const { id } = await params;
+        const invoice = findOrThrow(invoiceStore.invoices, id, 'Invoice');
+        return NextResponse.json(invoice);
+    },
+);
+
 export const PATCH = withErrorHandling(
     async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
         const { id } = await params;
