@@ -133,13 +133,20 @@ export function useInvoiceEvents() {
 
         connect();
 
-        // Cleanup, like ngOnDestroy: without it every mount would leak an open connection.
-        // In dev, React Strict Mode mounts -> unmounts -> remounts, so you'll see one connection
-        // closed right away (and a "closed before the connection is established" warning): expected
+        // Cleanup, like ngOnDestroy: without it every mount would leak an open connection
         return () => {
             unmounted = true;
             clearTimeout(reconnectTimer);
-            socket.close();
+            socket.onmessage = null;
+
+            // In dev, React Strict Mode mounts -> unmounts -> remounts right away, so the first
+            // socket is still handshaking here. Closing it now logs "closed before the connection
+            // is established": let the handshake finish, then close it
+            if (socket.readyState === WebSocket.CONNECTING) {
+                socket.onopen = () => socket.close();
+            } else {
+                socket.close();
+            }
         };
     }, [queryClient]);
 }

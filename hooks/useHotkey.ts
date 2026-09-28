@@ -22,9 +22,12 @@ export function useHotkey(key: string | undefined, handler: () => void) {
 
     useEffect(() => {
         if (!key) return;
+        const expectedKey = key.toLowerCase();
 
         function handleKeyDown(event: KeyboardEvent) {
-            if (event.key.toLowerCase() !== key?.toLowerCase()) return;
+            // Chrome autofill dispatches a keydown without `key`, despite the KeyboardEvent type
+            if (typeof event.key !== 'string') return;
+            if (event.key.toLowerCase() !== expectedKey) return;
             if (event.metaKey || event.ctrlKey || event.altKey) return;
             if (isTypingTarget(event.target)) return;
 
