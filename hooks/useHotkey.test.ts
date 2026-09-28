@@ -1,32 +1,32 @@
-// Testing a hook: a hook can only run inside a component, so renderHook mounts a tiny
-// invisible test component that calls it. unmount() then runs the effect cleanups.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, renderHook } from '@testing-library/react';
 import { useHotkey } from './useHotkey';
 
 describe('useHotkey', () => {
-    // vi.fn() = a mock function that records its calls (Jasmine: jasmine.createSpy())
-    const handler = vi.fn();
-    afterEach(() => handler.mockReset());
-
-    it('calls the handler when the key is pressed', () => {
+    it('calls the handler when the key is pressed, whatever its case', () => {
+        const handler = vi.fn();
         renderHook(() => useHotkey('n', handler));
 
-        // fireEvent dispatches ONE raw DOM event. Enough here: the hook listens to keydown only
         fireEvent.keyDown(window, { key: 'n' });
-
-        expect(handler).toHaveBeenCalledOnce();
-    });
-
-    it('matches the key case-insensitively (Shift / Caps Lock)', () => {
-        renderHook(() => useHotkey('n', handler));
-
         fireEvent.keyDown(window, { key: 'N' });
 
-        expect(handler).toHaveBeenCalledOnce();
+        expect(handler).toHaveBeenCalledTimes(2);
     });
 
-    it('ignores the key combined with Ctrl / Cmd, so browser shortcuts keep working', () => {
+    it('lets the key be typed in a form field', () => {
+        const handler = vi.fn();
+        renderHook(() => useHotkey('n', handler));
+        const input = document.createElement('input');
+        document.body.append(input);
+
+        fireEvent.keyDown(input, { key: 'n' });
+
+        expect(handler).not.toHaveBeenCalled();
+        input.remove();
+    });
+
+    it('leaves browser shortcuts like Ctrl+N alone', () => {
+        const handler = vi.fn();
         renderHook(() => useHotkey('n', handler));
 
         fireEvent.keyDown(window, { key: 'n', ctrlKey: true });
@@ -35,27 +35,13 @@ describe('useHotkey', () => {
         expect(handler).not.toHaveBeenCalled();
     });
 
-    it('ignores keys typed inside a form field', () => {
-        renderHook(() => useHotkey('n', handler));
-        const input = document.createElement('input');
-        document.body.append(input);
-
-        // The event bubbles from the input up to window, where the hook listens
-        fireEvent.keyDown(input, { key: 'n' });
-
-        expect(handler).not.toHaveBeenCalled();
-        input.remove();
-    });
-
-    // REGRESSION TEST: reproduces a bug we fixed, so it can never come back unnoticed.
-    // Chrome autofill fires a `keydown` that is a plain Event, without a `key` property,
-    // and `event.key.toLowerCase()` crashed with "Cannot read properties of undefined"
-    it('does not crash on a keydown event without key (Chrome autofill)', () => {
-        renderHook(() => useHotkey('n', handler));
-        // An exception inside an event listener doesn't propagate to dispatchEvent: the
-        // browser (and jsdom) report it as an 'error' event on window. So we listen to that
+    // Regression: Chrome autofill fires a keydown without `key` and event.key.toLowerCase()
+    // crashed. A listener exception doesn't reach dispatchEvent, jsdom reports it on window
+    it('ignores a keydown without key instead of crashing (Chrome autofill)', () => {
+        const handler = vi.fn();
         const onError = vi.fn();
         window.addEventListener('error', onError);
+        renderHook(() => useHotkey('n', handler));
 
         window.dispatchEvent(new Event('keydown'));
 
@@ -64,27 +50,9 @@ describe('useHotkey', () => {
         window.removeEventListener('error', onError);
     });
 
-    it('does nothing when no key is given', () => {
-        renderHook(() => useHotkey(undefined, handler));
-
-        fireEvent.keyDown(window, { key: 'n' });
-
-        expect(handler).not.toHaveBeenCalled();
-    });
-
-    it('stops listening once the component unmounts (no leak)', () => {
-        const { unmount } = renderHook(() => useHotkey('n', handler));
-
-        unmount();
-        fireEvent.keyDown(window, { key: 'n' });
-
-        expect(handler).not.toHaveBeenCalled();
-    });
-
-    it('always calls the latest handler without re-subscribing', () => {
+    it('calls the latest handler after a re-render', () => {
         const first = vi.fn();
         const second = vi.fn();
-        // rerender() re-runs the hook with new props, like a parent re-rendering
         const { rerender } = renderHook(({ fn }) => useHotkey('n', fn), {
             initialProps: { fn: first },
         });
@@ -94,5 +62,15 @@ describe('useHotkey', () => {
 
         expect(first).not.toHaveBeenCalled();
         expect(second).toHaveBeenCalledOnce();
+    });
+
+    it('stops listening once unmounted', () => {
+        const handler = vi.fn();
+        const { unmount } = renderHook(() => useHotkey('n', handler));
+
+        unmount();
+        fireEvent.keyDown(window, { key: 'n' });
+
+        expect(handler).not.toHaveBeenCalled();
     });
 });

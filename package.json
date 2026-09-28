@@ -9,6 +9,8 @@
         "start": "next start",
         "lint": "eslint",
         "test": "vitest",
+        "test:unit": "vitest run --project unit",
+        "test:int": "vitest run --project int",
         "test:ui": "vitest --ui",
         "test:e2e": "playwright test"
     },

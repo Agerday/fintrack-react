@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 // real WebSocket server). Nothing is mocked. Slowest tests, but the closest to a user.
 // Angular analogy: Protractor / Cypress. See https://playwright.dev/docs/test-configuration
 export default defineConfig({
-    testDir: './tests',
+    testDir: './e2e',
     // Tests run in parallel workers, so they must not depend on each other: each test
     // creates its own invoice (unique name) instead of relying on the seed data
     fullyParallel: true,

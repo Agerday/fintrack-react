@@ -5,7 +5,14 @@ export const invoiceStatusSchema = z.enum(invoiceStatuses);
 
 export const invoiceSchema = z.object({
     client: z.string().trim().min(1, 'Client is required'),
-    amount: z.number({ error: 'Amount is required' }).positive('Amount must be greater than 0'),
+    amount: z
+        .number({ error: 'Amount is required' })
+        .positive('Amount must be greater than 0')
+        // Not multipleOf(0.01): floats make 0.29 / 0.01 = 28.999…, so compare with a tolerance
+        .refine(
+            (amount) => Math.abs(Math.round(amount * 100) - amount * 100) < 1e-9,
+            'Amount can have at most 2 decimals',
+        ),
 });
 
 // PATCH: use extend to have any field of the invoice, including status, every field optional

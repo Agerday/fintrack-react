@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: CI
 on:
   push:
     branches: [ main, master ]
@@ -15,10 +15,19 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
+      # Cheapest checks first: a lint or type error fails the run before any browser starts
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Integration tests
+        run: npm run test:int
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-      - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright install --with-deps chromium
+      - name: E2E tests
+        run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

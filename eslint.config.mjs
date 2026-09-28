@@ -19,7 +19,7 @@ const eslintConfig = defineConfig([
     {
         // Playwright E2E specs: no React here. Playwright fixtures call a `use()` function
         // that the React hooks rule mistakes for React's use() hook
-        files: ["tests/**"],
+        files: ["e2e/**"],
         rules: {"react-hooks/rules-of-hooks": "off"},
     },
 ]);

@@ -27,5 +27,6 @@ export const POST = withErrorHandling(async (request: Request) => {
     // WebSocket: publish AFTER the store is updated, so clients refetching get the new invoice
     await publishEvent<InvoiceEvent>(request, { type: 'invoice.created', id: newInvoice.id });
 
-    return NextResponse.json(invoiceStore.invoices, { status: 201 });
+    // Return the created resource, as typed by createInvoice in api.ts
+    return NextResponse.json(newInvoice, { status: 201 });
 });

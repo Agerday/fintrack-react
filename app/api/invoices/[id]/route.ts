@@ -19,14 +19,15 @@ export const PATCH = withErrorHandling(
     async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
         const { id } = await params;
         const data = await parseBody(request, invoiceUpdateSchema);
-        findOrThrow(invoiceStore.invoices, id, 'Invoice');
+        const updated = { ...findOrThrow(invoiceStore.invoices, id, 'Invoice'), ...data };
 
         invoiceStore.invoices = invoiceStore.invoices.map((invoice) =>
-            invoice.id === id ? { ...invoice, ...data } : invoice,
+            invoice.id === id ? updated : invoice,
         );
         // WebSocket: notify every connected client (other tabs included) that this invoice changed
         await publishEvent<InvoiceEvent>(request, { type: 'invoice.updated', id });
-        return NextResponse.json({ id, ...data });
+        // The full invoice, as typed by updateInvoice in api.ts (not only the patched fields)
+        return NextResponse.json(updated);
     },
 );
 
