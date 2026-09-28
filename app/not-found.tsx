@@ -1,14 +1,20 @@
 import Link from 'next/link';
+import { SearchX } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 export default function NotFound() {
     return (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
-            <h2 className="text-xl font-semibold">Page not found</h2>
-            <p className="text-slate-500">The page you are looking for does not exist.</p>
-            <Link href="/" className={buttonVariants()}>
-                Back to dashboard
-            </Link>
-        </div>
+        <EmptyState
+            icon={SearchX}
+            title="Page not found"
+            description="The page you are looking for does not exist."
+            className="mt-8 py-16"
+            action={
+                <Link href="/" className={buttonVariants()}>
+                    Back to dashboard
+                </Link>
+            }
+        />
     );
 }

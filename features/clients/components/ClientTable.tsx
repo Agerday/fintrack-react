@@ -8,44 +8,50 @@ import { useClients } from '@/features/clients/hooks';
 
 const columns: Column<Client>[] = [
     {
-        key: 'id',
-        header: 'Client',
-    },
-    {
         key: 'name',
-        header: 'Name',
-    },
-    {
-        key: 'email',
-        header: 'Email',
-    },
-    {
-        key: 'phone',
-        header: 'Phone',
+        header: 'Client',
+        // Name + email in one cell: the email is secondary info, no need for its own column
+        render: (value, client) => (
+            <div className="min-w-0">
+                <p className="font-medium">{value}</p>
+                <p className="truncate text-xs font-normal text-muted-foreground">{client.email}</p>
+            </div>
+        ),
     },
     {
         key: 'company',
         header: 'Company',
     },
     {
+        key: 'phone',
+        header: 'Phone',
+        className: 'text-muted-foreground tabular-nums',
+    },
+    {
         key: 'invoices',
         header: 'Invoices',
+        className: 'text-right tabular-nums',
     },
     {
         key: 'total',
         header: 'Total',
+        className: 'text-right font-medium tabular-nums',
         render: (value) => formatCurrency(value),
     },
 ];
 
 export function ClientTable() {
-    const { data: clients = [], isLoading, error } = useClients();
+    const { data: clients = [], isLoading, error, refetch } = useClients();
 
     return (
-        <QueryState isPending={isLoading} error={error} isEmpty={!clients.length}>
-            <div className="rounded-xl border bg-card card-elevated">
-                <DataTable columns={columns} data={clients} />
-            </div>
+        <QueryState
+            isPending={isLoading}
+            error={error}
+            onRetry={() => void refetch()}
+            isEmpty={!clients.length}
+            emptyMessage="No clients yet"
+        >
+            <DataTable columns={columns} data={clients} rowKey="id" />
         </QueryState>
     );
 }

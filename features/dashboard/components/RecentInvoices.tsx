@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, FileText } from 'lucide-react';
 import type { Invoice } from '@/features/invoices/types';
 import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge';
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { buttonVariants } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency } from '@/lib/formatters';
 
 type RecentInvoicesProps = {
@@ -10,39 +13,47 @@ type RecentInvoicesProps = {
 
 export function RecentInvoices({ invoices }: RecentInvoicesProps) {
     return (
-        <div className="rounded-xl border bg-white">
-            <div className="flex items-center justify-between border-b px-6 py-4">
-                <div>
-                    <h2 className="font-semibold">Recent invoices</h2>
-                    <p className="text-sm text-slate-500">Your latest invoices</p>
-                </div>
+        <Card className="gap-0 pb-0">
+            <CardHeader className="border-b">
+                <CardTitle>Recent invoices</CardTitle>
+                <CardDescription>Your latest invoices</CardDescription>
+                <CardAction>
+                    <Link href="/invoices" className={buttonVariants({ variant: 'ghost' })}>
+                        View all
+                        <ArrowUpRight />
+                    </Link>
+                </CardAction>
+            </CardHeader>
 
-                <Link
-                    href="/invoices"
-                    className="flex items-center gap-1 text-sm font-medium text-slate-900 hover:underline"
-                >
-                    View all
-                    <ArrowUpRight className="h-4 w-4" />
-                </Link>
-            </div>
+            {invoices.length ? (
+                <ul className="divide-y">
+                    {invoices.map((invoice) => (
+                        <li key={invoice.id}>
+                            <Link
+                                href={`/invoices/${invoice.id}`}
+                                className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-muted/50"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium">{invoice.id}</p>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {invoice.client}
+                                    </p>
+                                </div>
 
-            <div className="divide-y">
-                {invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between px-6 py-4">
-                        <div>
-                            <p className="text-sm font-medium">{invoice.id}</p>
-                            <p className="text-sm text-slate-500">{invoice.client}</p>
-                        </div>
-
-                        <div className="flex items-center gap-8">
-                            <span className="text-sm font-medium">
-                                {formatCurrency(invoice.amount)}
-                            </span>
-                            <InvoiceStatusBadge status={invoice.status} />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+                                {/* Amount above the badge on mobile, side by side from sm up */}
+                                <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-6">
+                                    <span className="text-sm font-medium tabular-nums">
+                                        {formatCurrency(invoice.amount)}
+                                    </span>
+                                    <InvoiceStatusBadge status={invoice.status} />
+                                </div>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <EmptyState icon={FileText} title="No invoices yet" className="m-4 border-none" />
+            )}
+        </Card>
     );
 }

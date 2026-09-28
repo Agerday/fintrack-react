@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { buttonVariants } from '@/components/ui/button';
 import { InvoiceDetail } from '@/features/invoices/components/InvoiceDetail';
@@ -8,16 +9,16 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     const { id } = await params;
 
     return (
-        <div className="space-y-8">
-            <PageHeader
-                title={`Invoice ${id}`}
-                description="Invoice details."
-                action={
-                    <Link href="/invoices" className={buttonVariants({ variant: 'outline' })}>
-                        Back to invoices
-                    </Link>
-                }
-            />
+        <div className="mx-auto max-w-3xl space-y-6 lg:space-y-8">
+            <Link
+                href="/invoices"
+                className={buttonVariants({ variant: 'ghost', className: '-ml-2.5' })}
+            >
+                <ArrowLeft />
+                Back to invoices
+            </Link>
+
+            <PageHeader title={`Invoice ${id}`} description="Invoice details." />
 
             <InvoiceDetail id={id} />
         </div>

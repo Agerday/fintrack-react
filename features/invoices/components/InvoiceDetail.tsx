@@ -2,14 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
-import {
-    useDeleteInvoice,
-    useInvoice,
-    useInvoiceEvents,
-    useUpdateInvoice,
-} from '@/features/invoices/hooks';
+import { InvoiceActions } from './InvoiceActions';
+import { useInvoice, useInvoiceEvents } from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 
 type InvoiceDetailProps = {
@@ -18,61 +15,51 @@ type InvoiceDetailProps = {
 
 export function InvoiceDetail({ id }: InvoiceDetailProps) {
     const router = useRouter();
-    const { data: invoice, isPending, error } = useInvoice(id);
+    const { data: invoice, isPending, error, refetch } = useInvoice(id);
     useInvoiceEvents();
-    const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
-    const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
-
-    function handleDelete() {
-        deleteInvoice(id, { onSuccess: () => router.push('/invoices') });
-    }
 
     return (
-        <QueryState isPending={isPending} error={error}>
+        <QueryState
+            isPending={isPending}
+            error={error}
+            onRetry={() => void refetch()}
+            loadingFallback={<Skeleton className="h-64 w-full rounded-xl" />}
+        >
             {invoice && (
-                <div className="card-elevated rounded-xl border bg-card p-6">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Invoice</p>
-                            <p className="text-lg font-semibold">{invoice.id}</p>
+                <Card className="gap-0 py-0">
+                    <CardContent className="p-5 sm:p-6">
+                        {/* The id is already the page title, the card leads with the amount */}
+                        <div className="flex items-center justify-between gap-4">
+                            <p className="text-sm text-muted-foreground">Amount</p>
+                            <InvoiceStatusBadge status={invoice.status} />
                         </div>
-                        <InvoiceStatusBadge status={invoice.status} />
-                    </div>
 
-                    <dl className="mt-6 grid gap-6 sm:grid-cols-3">
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Client</dt>
-                            <dd className="mt-1 font-medium">{invoice.client}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Date</dt>
-                            <dd className="mt-1 font-medium">{formatDate(invoice.date)}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Amount</dt>
-                            <dd className="mt-1 font-medium">{formatCurrency(invoice.amount)}</dd>
-                        </div>
-                    </dl>
+                        <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+                            {formatCurrency(invoice.amount)}
+                        </p>
 
-                    <div className="mt-8 flex justify-end gap-2">
-                        {invoice.status !== 'paid' && (
-                            <Button
-                                variant={'outline'}
-                                disabled={isUpdating}
-                                onClick={() => markAsPaid({ id, data: { status: 'paid' } })}
-                            >
-                                Mark As Paid
-                            </Button>
-                        )}
-                        <Button
-                            variant={'destructive'}
-                            disabled={isDeleting}
-                            onClick={handleDelete}
-                        >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
-                        </Button>
-                    </div>
-                </div>
+                        <dl className="mt-6 grid gap-4 border-t pt-6 sm:grid-cols-2">
+                            <div>
+                                <dt className="text-sm text-muted-foreground">Client</dt>
+                                <dd className="mt-1 font-medium">{invoice.client}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-muted-foreground">Issued on</dt>
+                                <dd className="mt-1 font-medium">{formatDate(invoice.date)}</dd>
+                            </div>
+                        </dl>
+                    </CardContent>
+
+                    <CardFooter className="justify-end p-4 sm:px-6">
+                        <div className="w-full sm:w-auto">
+                            <InvoiceActions
+                                invoice={invoice}
+                                variant="full"
+                                onDeleted={() => router.push('/invoices')}
+                            />
+                        </div>
+                    </CardFooter>
+                </Card>
             )}
         </QueryState>
     );

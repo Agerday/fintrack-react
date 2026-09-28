@@ -1,4 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/formatters';
 
 export type StatCardProps = {
@@ -20,18 +22,25 @@ export function StatCard({
         valueType === 'currency' ? formatCurrency(value) : value.toLocaleString('en-US');
 
     return (
-        <div className="card-elevated rounded-xl border bg-card p-6">
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500">{label}</p>
-
-                <div className="rounded-lg bg-slate-100 p-2">
-                    <Icon className="h-4 w-4 text-slate-600" />
+        <Card className="gap-0 p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                <div className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground sm:flex">
+                    <Icon className="size-4" />
                 </div>
             </div>
 
-            <p className="mt-4 text-2xl font-semibold">{formattedValue}</p>
+            <p className="mt-2 text-xl font-semibold sm:mt-3 sm:text-2xl tracking-tight tabular-nums">
+                {formattedValue}
+            </p>
 
-            <p className="mt-1 text-xs text-green-600">{change} from last month</p>
-        </div>
+            <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-0.5 font-medium text-success">
+                    <TrendingUp className="size-3.5" />
+                    {change}
+                </span>
+                from last month
+            </p>
+        </Card>
     );
 }

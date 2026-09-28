@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCheckEmail, useCreateClient } from '@/features/clients/hooks';
 import { ClientFormValues, clientSchema } from '@/features/clients/schema';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { FormError, FormField } from '@/components/shared/FormField';
 import { ApiError } from '@/lib/api-error';
 import {
     Select,
@@ -53,30 +53,34 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
     const globalErrorMessage =
         error instanceof ApiError && !error.field ? error.message : undefined;
 
+    // The async "already registered" check is shown like a regular field error
+    const emailError =
+        errors.email?.message ??
+        (!checkingEmail && emailCheck?.exists ? 'This email is already registered.' : undefined);
+
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-            <div className="space-y-1.5">
-                <Label htmlFor="name">Name</Label>
+            <FormField label="Name" htmlFor="name" error={errors.name?.message}>
                 <Input id="name" {...register('name')} placeholder="Jane Doe" />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-            </div>
+            </FormField>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" {...register('email')} placeholder="jane@company.com" />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-                {checkingEmail && (
-                    <p className="text-xs text-muted-foreground">Checking availability...</p>
-                )}
-                {!checkingEmail && emailCheck?.exists && (
-                    <p className="text-sm text-destructive">This email is already registered.</p>
-                )}
-            </div>
+            <FormField
+                label="Email"
+                htmlFor="email"
+                error={emailError}
+                hint={checkingEmail && 'Checking availability...'}
+            >
+                <Input
+                    id="email"
+                    type="email"
+                    {...register('email')}
+                    placeholder="jane@company.com"
+                />
+            </FormField>
 
             {/*Controller wraps a component that isn't a plain <input> (like Select),
             so React Hook Form can still track its value*/}
-            <div className="space-y-1.5">
-                <Label>Phone</Label>
+            <FormField label="Phone" error={errors.phone?.message}>
                 <div className="flex gap-2">
                     <Controller
                         control={control}
@@ -110,26 +114,23 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
                             </Select>
                         )}
                     />
-                    <Input {...register('phone')} placeholder="1012345678" className="flex-1" />
+                    <Input
+                        {...register('phone')}
+                        type="tel"
+                        aria-label="Phone number"
+                        placeholder="1012345678"
+                        className="min-w-0 flex-1"
+                    />
                 </div>
-                {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
-            </div>
+            </FormField>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="company">Company</Label>
+            <FormField label="Company" htmlFor="company" error={errors.company?.message}>
                 <Input id="company" {...register('company')} placeholder="Acme Corporation" />
-                {errors.company && (
-                    <p className="text-sm text-destructive">{errors.company.message}</p>
-                )}
-            </div>
+            </FormField>
 
-            {globalErrorMessage && (
-                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {globalErrorMessage}
-                </p>
-            )}
+            <FormError message={globalErrorMessage} />
 
-            <Button type={'submit'} disabled={isPending}>
+            <Button type="submit" size="lg" disabled={isPending} className="w-full">
                 {isPending ? 'Creating...' : 'Create client'}
             </Button>
         </form>

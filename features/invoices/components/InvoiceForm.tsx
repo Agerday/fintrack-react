@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { FormError, FormField } from '@/components/shared/FormField';
 import { useCreateInvoice } from '@/features/invoices/hooks';
 import { InvoiceFormValues, invoiceSchema } from '@/features/invoices/schema';
 import { ApiError } from '@/lib/api-error';
@@ -40,18 +40,13 @@ export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-            <div className="space-y-1.5">
-                <Label htmlFor="client">Client</Label>
+            <FormField label="Client" htmlFor="client" error={errors.client?.message}>
                 <Input id="client" {...register('client')} placeholder="Acme Corporation" />
-                {errors.client && (
-                    <p className="text-sm text-destructive">{errors.client.message}</p>
-                )}
-            </div>
+            </FormField>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="amount">Amount</Label>
+            <FormField label="Amount" htmlFor="amount" error={errors.amount?.message}>
                 <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">
                         $
                     </span>
                     <Input
@@ -70,18 +65,11 @@ export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
                         className="pl-6"
                     />
                 </div>
-                {errors.amount && (
-                    <p className="text-sm text-destructive">{errors.amount.message}</p>
-                )}
-            </div>
+            </FormField>
 
-            {globalErrorMessage && (
-                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {globalErrorMessage}
-                </p>
-            )}
+            <FormError message={globalErrorMessage} />
 
-            <Button type="submit" disabled={isPending} className="w-full">
+            <Button type="submit" size="lg" disabled={isPending} className="w-full">
                 {isPending ? 'Creating...' : 'Create invoice'}
             </Button>
         </form>
