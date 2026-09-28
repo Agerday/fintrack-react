@@ -5,13 +5,13 @@ import path from 'path'
 export default defineConfig({
     plugins: [react()],
     test: {
+        // Default environment: jsdom, a fake browser DOM in Node. Files that test server code
+        // (Route Handlers) switch to plain Node with a `// @vitest-environment node` comment
         environment: 'jsdom',
         setupFiles: './vitest.setup.ts',
         globals: true,
         // tests/ holds the Playwright E2E specs, run by `npx playwright test`, not Vitest
         exclude: [...configDefaults.exclude, 'tests/**'],
-        // no unit tests yet: don't fail the run until the first one is written
-        passWithNoTests: true,
     },
     resolve: {
         alias: {
