@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { NotificationDemo } from '@/features/notifications/components/NotificationDemo';
 
 function Section({
     label,
@@ -137,6 +138,15 @@ export default function StyleGuidePage() {
                         <Button size="sm">Action</Button>
                     </CardFooter>
                 </Card>
+            </Section>
+
+            <Section label="Feedback" title="Notifications">
+                <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                        Pushes a sample to the bell in the header.
+                    </p>
+                    <NotificationDemo />
+                </div>
             </Section>
         </div>
     );

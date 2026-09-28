@@ -11,6 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 export function Header() {
     const setMobileOpen = useSidebarStore((state) => state.setMobileOpen);
@@ -29,6 +30,9 @@ export function Header() {
                 </Button>
                 <p className="text-sm text-muted-foreground">Welcome back</p>
             </div>
+
+            <div className="flex items-center gap-1 sm:gap-2">
+            <NotificationBell />
 
             <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
@@ -51,6 +55,7 @@ export function Header() {
                     <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            </div>
         </header>
     );
 }
