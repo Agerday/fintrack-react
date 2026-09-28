@@ -25,19 +25,19 @@ export const PATCH = withErrorHandling(
             invoice.id === id ? { ...invoice, ...data } : invoice,
         );
         // WebSocket: notify every connected client (other tabs included) that this invoice changed
-        await publishEvent<InvoiceEvent>({ type: 'invoice.updated', id });
+        await publishEvent<InvoiceEvent>(request, { type: 'invoice.updated', id });
         return NextResponse.json({ id, ...data });
     },
 );
 
 export const DELETE = withErrorHandling(
-    async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
+    async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
         const { id } = await params;
         findOrThrow(invoiceStore.invoices, id, 'Invoice');
 
         invoiceStore.invoices = invoiceStore.invoices.filter((invoice) => invoice.id !== id);
         // WebSocket: clients showing this invoice will refetch and get a 404
-        await publishEvent<InvoiceEvent>({ type: 'invoice.deleted', id });
+        await publishEvent<InvoiceEvent>(request, { type: 'invoice.deleted', id });
         return NextResponse.json({ success: true });
     },
 );

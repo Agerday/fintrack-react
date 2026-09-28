@@ -25,7 +25,7 @@ export const POST = withErrorHandling(async (request: Request) => {
     // .push() mutates the existing array
     invoiceStore.invoices = [...invoiceStore.invoices, newInvoice];
     // WebSocket: publish AFTER the store is updated, so clients refetching get the new invoice
-    await publishEvent<InvoiceEvent>({ type: 'invoice.created', id: newInvoice.id });
+    await publishEvent<InvoiceEvent>(request, { type: 'invoice.created', id: newInvoice.id });
 
     return NextResponse.json(invoiceStore.invoices, { status: 201 });
 });

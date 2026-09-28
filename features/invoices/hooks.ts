@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createInvoice, deleteInvoice, getInvoice, getInvoices, updateInvoice } from './api';
-import { InvoiceFormUpdateValues } from '@/features/invoices/schema';
+import { InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/invoices/schema';
 import { useEffect } from 'react';
-import { WS_URL } from '@/lib/realtime';
-import type { InvoiceEvent } from './types';
+import { parseEvent, TAB_ID, WS_URL } from '@/lib/realtime';
 
 export function useInvoices() {
     //Here is only reading (useQuery)
@@ -100,9 +99,15 @@ export function useInvoiceEvents() {
             };
 
             // Fires for every message pushed by the server. WebSocket only carries text or binary,
-            // so structured data travels as JSON and must be parsed by hand
+            // so structured data travels as JSON and must be parsed (and validated) by hand
             socket.onmessage = (event: MessageEvent<string>) => {
-                const message = JSON.parse(event.data) as InvoiceEvent;
+                const message = parseEvent(event.data, invoiceEventSchema);
+                if (!message) {
+                    console.warn('Ignored invalid invoice event:', event.data);
+                    return;
+                }
+                // Echo of this tab's own mutation: its onSuccess already refreshed the cache
+                if (message.sourceId === TAB_ID) return;
 
                 // The event only says WHAT changed (type + id), not the new data:
                 // we invalidate and TanStack Query refetches through the normal API
