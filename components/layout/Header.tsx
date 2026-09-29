@@ -32,29 +32,29 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2">
-            <NotificationBell />
+                <NotificationBell />
 
-            <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
-                    <div className="hidden text-right sm:block">
-                        <p className="text-sm leading-none font-medium">Adrien Gerday</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Admin</p>
-                    </div>
-                    <Avatar className="size-9">
-                        <AvatarImage src="/avatar.png" alt="Adrien Gerday" />
-                        <AvatarFallback className="bg-accent text-accent-foreground">
-                            AG
-                        </AvatarFallback>
-                    </Avatar>
-                </DropdownMenuTrigger>
+                <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
+                        <div className="hidden text-right sm:block">
+                            <p className="text-sm leading-none font-medium">Adrien Gerday</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Admin</p>
+                        </div>
+                        <Avatar className="size-9">
+                            <AvatarImage src="/avatar.png" alt="Adrien Gerday" />
+                            <AvatarFallback className="bg-accent text-accent-foreground">
+                                AG
+                            </AvatarFallback>
+                        </Avatar>
+                    </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Profile</DropdownMenuItem>
+                        <DropdownMenuItem>Settings</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

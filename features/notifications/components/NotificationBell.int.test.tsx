@@ -50,9 +50,7 @@ describe('NotificationBell', () => {
         await user.click(within(panel).getByRole('button', { name: 'Mark all as read' }));
 
         expect(within(panel).getByText('All caught up')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Notifications' })).not.toHaveTextContent(
-            /\d/,
-        );
+        expect(screen.getByRole('button', { name: 'Notifications' })).not.toHaveTextContent(/\d/);
     });
 
     it('marks a notification as read when the user clicks it', async () => {
@@ -61,7 +59,9 @@ describe('NotificationBell', () => {
         const { user } = renderBell();
 
         const panel = await openPanel(user);
-        await user.click(within(panel).getByRole('button', { name: /INV-004 is overdue/ }));
+        await user.click(
+            within(panel).getByRole('button', { name: /^Invoice INV-004 is overdue/ }),
+        );
 
         expect(within(panel).getByText('1 unread')).toBeInTheDocument();
     });

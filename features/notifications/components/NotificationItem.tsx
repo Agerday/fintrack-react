@@ -24,6 +24,13 @@ export function NotificationItem({ notification, onSelect, onRemove }: Notificat
 
     const content = (
         <>
+            {/* In the left gutter: the right edge is taken by the remove button */}
+            {!notification.read && (
+                <span
+                    className="absolute top-1/2 left-1.5 size-1.5 -translate-y-1/2 rounded-full bg-primary"
+                    aria-hidden
+                />
+            )}
             <span
                 className={cn(
                     'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
@@ -50,9 +57,6 @@ export function NotificationItem({ notification, onSelect, onRemove }: Notificat
                     {formatRelativeTime(notification.createdAt)}
                 </span>
             </span>
-            {!notification.read && (
-                <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" aria-hidden />
-            )}
         </>
     );
 
@@ -73,7 +77,11 @@ export function NotificationItem({ notification, onSelect, onRemove }: Notificat
                     {content}
                 </Link>
             ) : (
-                <button type="button" onClick={() => onSelect(notification)} className={itemClassName}>
+                <button
+                    type="button"
+                    onClick={() => onSelect(notification)}
+                    className={itemClassName}
+                >
                     {content}
                 </button>
             )}

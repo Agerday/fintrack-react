@@ -30,12 +30,7 @@ export function NotificationPanel({
                         {unreadCount ? `${unreadCount} unread` : 'All caught up'}
                     </p>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!unreadCount}
-                    onClick={onMarkAllAsRead}
-                >
+                <Button variant="ghost" size="sm" disabled={!unreadCount} onClick={onMarkAllAsRead}>
                     Mark all as read
                 </Button>
             </div>

@@ -7,7 +7,10 @@ import type { StatCardProps } from '@/components/layout/StatCard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { QueryState } from '@/components/shared/QueryState';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
 import { useInvoices } from '@/features/invoices/hooks';
+import { AmountByStatusChart } from '@/features/dashboard/components/AmountByStatusChart';
+import { sumAmountByStatus } from '@/features/dashboard/stats';
 
 const stats: StatCardProps[] = [
     {
@@ -31,7 +34,10 @@ function DashboardSkeleton() {
                     <Skeleton key={stat.label} className="h-32 rounded-xl" />
                 ))}
             </div>
-            <Skeleton className="h-80 rounded-xl" />
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Skeleton className="h-80 rounded-xl" />
+                <Skeleton className="h-80 rounded-xl" />
+            </div>
         </div>
     );
 }
@@ -39,6 +45,8 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
     const { data: invoices = [], isLoading, error, refetch } = useInvoices();
     const recentInvoices = invoices.slice(-5).reverse();
+    // Stable reference between renders: a new array would make the chart redraw every time
+    const amountByStatus = useMemo(() => sumAmountByStatus(invoices), [invoices]);
 
     return (
         <div className="space-y-6 lg:space-y-8">
@@ -52,7 +60,10 @@ export default function DashboardPage() {
             >
                 <div className="space-y-6">
                     <StatsGrid stats={stats} />
-                    <RecentInvoices invoices={recentInvoices} />
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <AmountByStatusChart data={amountByStatus} />
+                        <RecentInvoices invoices={recentInvoices} />
+                    </div>
                 </div>
             </QueryState>
         </div>
