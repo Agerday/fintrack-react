@@ -1,8 +1,8 @@
 'use client';
 
 import { ArcElement, Chart, DoughnutController, Tooltip } from 'chart.js';
-import { collectionRate } from '../stats';
-import type { AmountByStatus } from '../stats';
+import { collectionRate } from '../rules';
+import type { AmountByStatus } from '../rules';
 import { statusColorTokens, statusDotClasses, statusLabels } from '@/features/invoices/status';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChart } from '@/hooks/useChart';

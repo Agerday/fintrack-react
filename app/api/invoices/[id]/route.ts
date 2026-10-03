@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { invoiceUpdateSchema } from '@/features/invoices/schema';
+import { canChangeStatus } from '@/features/invoices/rules';
+import { HttpError } from '@/lib/http-error';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { findOrThrow } from '@/lib/find-or-throw';
 import { parseBody } from '@/lib/parse-body';
@@ -19,7 +21,11 @@ export const PATCH = withErrorHandling(
     async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
         const { id } = await params;
         const data = await parseBody(request, invoiceUpdateSchema);
-        const updated = { ...findOrThrow(invoiceStore.invoices, id, 'Invoice'), ...data };
+        const invoice = findOrThrow(invoiceStore.invoices, id, 'Invoice');
+        if (data.status && !canChangeStatus(invoice.status, data.status)) {
+            throw new HttpError(409, 'A paid invoice cannot change status');
+        }
+        const updated = { ...invoice, ...data };
 
         invoiceStore.invoices = invoiceStore.invoices.map((invoice) =>
             invoice.id === id ? updated : invoice,

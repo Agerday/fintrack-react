@@ -2,7 +2,7 @@
 
 import { Users } from 'lucide-react';
 import { BarController, BarElement, CategoryScale, Chart, LinearScale, Tooltip } from 'chart.js';
-import type { AmountByClient } from '../stats';
+import type { AmountByClient } from '../rules';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useChart } from '@/hooks/useChart';

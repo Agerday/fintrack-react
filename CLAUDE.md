@@ -38,6 +38,7 @@ No `src/` folder. Everything is at the root, `@/*` maps to `./*`.
     - `schema.ts` — Zod schemas + inferred form value types
     - `api.ts` — fetch functions, always through `apiClient`
     - `hooks.ts` — ALL TanStack Query hooks of the domain in one file (queries + mutations). No per-hook files, no `hooks/` folder.
+    - `rules.ts` — business rules: pure functions, no React / fetch / store. Route Handlers, MSW handlers and components call them instead of inlining logic. Unit tested in `rules.test.ts`.
     - `data.ts` — seed data
     - `components/` — domain components
 - `components/ui/` — shadcn/ui primitives. Add new ones with `npx shadcn add <name>`, never hand-write them.

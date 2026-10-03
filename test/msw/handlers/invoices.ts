@@ -1,6 +1,7 @@
 import { http, HttpResponse, ws } from 'msw';
 import type { z } from 'zod';
 import { invoiceSchema, invoiceUpdateSchema } from '@/features/invoices/schema';
+import { canChangeStatus } from '@/features/invoices/rules';
 import type { Invoice } from '@/features/invoices/types';
 import { WS_URL } from '@/lib/realtime';
 import { buildInvoice } from '@/test/factories';
@@ -58,6 +59,13 @@ export const invoiceHandlers = [
 
         const invoice = invoiceDb.invoices.find((i) => i.id === params.id);
         if (!invoice) return notFound();
+
+        if (result.data.status && !canChangeStatus(invoice.status, result.data.status)) {
+            return HttpResponse.json(
+                { message: 'A paid invoice cannot change status' },
+                { status: 409 },
+            );
+        }
 
         const updated = { ...invoice, ...result.data };
         invoiceDb.invoices = invoiceDb.invoices.map((i) => (i.id === updated.id ? updated : i));

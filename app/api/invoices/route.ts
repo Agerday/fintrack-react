@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { Invoice } from '@/features/invoices/types';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { invoiceSchema } from '@/features/invoices/schema';
+import { createInvoice } from '@/features/invoices/rules';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { parseBody } from '@/lib/parse-body';
 import { publishEvent } from '@/lib/realtime';
@@ -14,12 +14,7 @@ export async function GET() {
 export const POST = withErrorHandling(async (request: Request) => {
     const data = await parseBody(request, invoiceSchema);
 
-    const newInvoice: Invoice = {
-        id: `INV-${Date.now()}`,
-        ...data,
-        date: new Date().toISOString(),
-        status: 'pending',
-    };
+    const newInvoice = createInvoice(data, new Date());
 
     // create new array with new invoice and existing one
     // .push() mutates the existing array

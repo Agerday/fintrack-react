@@ -9,9 +9,10 @@ import { QueryState } from '@/components/shared/QueryState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { useInvoices } from '@/features/invoices/hooks';
+import { recentInvoices } from '@/features/invoices/rules';
 import { AmountByClientChart } from '@/features/dashboard/components/AmountByClientChart';
 import { CollectionRateChart } from '@/features/dashboard/components/CollectionRateChart';
-import { sumAmountByClient, sumAmountByStatus } from '@/features/dashboard/stats';
+import { sumAmountByClient, sumAmountByStatus } from '@/features/dashboard/rules';
 
 const stats: StatCardProps[] = [
     {
@@ -46,7 +47,7 @@ function DashboardSkeleton() {
 
 export default function DashboardPage() {
     const { data: invoices = [], isLoading, error, refetch } = useInvoices();
-    const recentInvoices = invoices.slice(-5).reverse();
+    const recent = recentInvoices(invoices);
     // Stable references between renders: a new array would make the charts redraw every time
     const amountByStatus = useMemo(() => sumAmountByStatus(invoices), [invoices]);
     const amountByClient = useMemo(() => sumAmountByClient(invoices), [invoices]);
@@ -67,7 +68,7 @@ export default function DashboardPage() {
                         <AmountByClientChart data={amountByClient} />
                         <CollectionRateChart data={amountByStatus} />
                     </div>
-                    <RecentInvoices invoices={recentInvoices} />
+                    <RecentInvoices invoices={recent} />
                 </div>
             </QueryState>
         </div>

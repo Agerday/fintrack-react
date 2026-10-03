@@ -1,6 +1,8 @@
 import { invoiceStatuses } from '@/features/invoices/schema';
 import type { Invoice, InvoiceStatus } from '@/features/invoices/types';
 
+// Business rules of the dashboard: pure functions, no React / fetch / store (see invoices/rules.ts)
+
 export type AmountByStatus = { status: InvoiceStatus; total: number }[];
 
 // Every status is always present (0 when no invoice has it), in the schema order,
