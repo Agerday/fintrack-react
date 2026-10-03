@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatRelativeTime } from './formatters';
+import { formatDate, formatInitials, formatRelativeTime } from './formatters';
 
 const now = new Date('2026-09-28T12:00:00.000Z');
 
@@ -21,5 +21,16 @@ describe('formatRelativeTime', () => {
         const eightDaysAgo = secondsAgo(8 * 86_400);
 
         expect(formatRelativeTime(eightDaysAgo, now)).toBe(formatDate(eightDaysAgo));
+    });
+});
+
+describe('formatInitials', () => {
+    it.each([
+        { name: 'Adrien Gerday', expected: 'AG' },
+        { name: 'Jean Claude Van Damme', expected: 'JD' },
+        { name: 'madonna', expected: 'M' },
+        { name: '  Ada   Lovelace ', expected: 'AL' },
+    ])('turns "$name" into "$expected"', ({ name, expected }) => {
+        expect(formatInitials(name)).toBe(expected);
     });
 });
