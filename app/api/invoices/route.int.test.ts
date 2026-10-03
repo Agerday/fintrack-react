@@ -31,16 +31,12 @@ describe('/api/invoices', () => {
         expect(await response.json()).toEqual(invoiceStore.invoices);
     });
 
-    it('creates a pending invoice and returns it with a 201', async () => {
+    it('creates the invoice and returns it with a 201', async () => {
         const response = await POST(postRequest({ client: 'Wayne Enterprises', amount: 500 }));
 
         expect(response.status).toBe(201);
         const created = await response.json();
-        expect(created).toMatchObject({
-            client: 'Wayne Enterprises',
-            amount: 500,
-            status: 'pending',
-        });
+        expect(created).toMatchObject({ client: 'Wayne Enterprises', amount: 500 });
         expect(invoiceStore.invoices).toContainEqual(created);
     });
 

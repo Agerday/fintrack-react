@@ -81,6 +81,17 @@ describe('/api/invoices/[id]', () => {
             expect(invoiceStore.invoices[0]).toEqual(invoice);
         });
 
+        it('refuses to move a paid invoice back to pending with a 409, and saves nothing', async () => {
+            const paid = buildInvoice({ status: 'paid' });
+            invoiceStore.invoices = [paid];
+
+            const response = await PATCH(patchRequest({ status: 'pending' }), context(paid.id));
+
+            expect(response.status).toBe(409);
+            expect(invoiceStore.invoices).toEqual([paid]);
+            expect(publishEvent).not.toHaveBeenCalled();
+        });
+
         it('returns a 404 for an unknown id', async () => {
             const response = await PATCH(patchRequest({ status: 'paid' }), context('INV-UNKNOWN'));
 

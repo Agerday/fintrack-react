@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectionRate, sumAmountByClient, sumAmountByStatus } from './stats';
+import { collectionRate, sumAmountByClient, sumAmountByStatus } from './rules';
 import { buildInvoice } from '@/test/factories';
 
 describe('sumAmountByStatus', () => {
