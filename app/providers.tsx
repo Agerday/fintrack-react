@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { ThemeProvider } from 'next-themes';
 import { ApiError } from '@/lib/api-error';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -23,5 +24,16 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             }),
     );
 
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+        // class strategy: next-themes toggles .dark on <html>, matching @custom-variant dark
+        // in globals.css. Its inline script sets it before paint, so no light flash on load
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </ThemeProvider>
+    );
 }

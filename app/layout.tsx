@@ -10,7 +10,12 @@ const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono'
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+        // next-themes adds the theme class to <html> before React hydrates: expected mismatch
+        <html
+            lang="en"
+            className={`${geistSans.variable} ${geistMono.variable}`}
+            suppressHydrationWarning
+        >
             <body>
                 <Providers>
                     <AppShell>{children}</AppShell>
