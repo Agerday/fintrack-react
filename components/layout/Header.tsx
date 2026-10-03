@@ -3,6 +3,7 @@
 import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -25,20 +26,23 @@ export function Header() {
                 <p className="text-sm text-muted-foreground">Welcome back</p>
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-2">
-                <ThemeToggle />
-                <NotificationBell />
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                    <ThemeToggle />
+                    <NotificationBell />
+                </div>
+                <Separator orientation="vertical" className="h-6 self-center" />
                 {/* Display only until a profile page exists to link to */}
-                <div className="flex items-center gap-3 px-2">
-                    <div className="hidden text-right sm:block">
-                        <p className="text-sm leading-none font-medium">Adrien Gerday</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Admin</p>
-                    </div>
+                <div className="flex items-center gap-2.5">
                     <Avatar className="size-9">
                         <AvatarFallback className="bg-accent text-accent-foreground">
                             AG
                         </AvatarFallback>
                     </Avatar>
+                    <div className="hidden leading-tight sm:block">
+                        <p className="text-sm font-medium">Adrien Gerday</p>
+                        <p className="text-xs text-muted-foreground">Admin</p>
+                    </div>
                 </div>
             </div>
         </header>

@@ -27,7 +27,7 @@ export function NotificationBell() {
                 render={
                     <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon-lg"
                         className="relative"
                         aria-label={
                             unreadCount ? `Notifications (${unreadCount} unread)` : 'Notifications'
