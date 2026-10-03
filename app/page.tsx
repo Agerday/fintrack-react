@@ -9,8 +9,9 @@ import { QueryState } from '@/components/shared/QueryState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { useInvoices } from '@/features/invoices/hooks';
-import { AmountByStatusChart } from '@/features/dashboard/components/AmountByStatusChart';
-import { sumAmountByStatus } from '@/features/dashboard/stats';
+import { AmountByClientChart } from '@/features/dashboard/components/AmountByClientChart';
+import { CollectionRateChart } from '@/features/dashboard/components/CollectionRateChart';
+import { sumAmountByClient, sumAmountByStatus } from '@/features/dashboard/stats';
 
 const stats: StatCardProps[] = [
     {
@@ -38,6 +39,7 @@ function DashboardSkeleton() {
                 <Skeleton className="h-80 rounded-xl" />
                 <Skeleton className="h-80 rounded-xl" />
             </div>
+            <Skeleton className="h-80 rounded-xl" />
         </div>
     );
 }
@@ -45,8 +47,9 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
     const { data: invoices = [], isLoading, error, refetch } = useInvoices();
     const recentInvoices = invoices.slice(-5).reverse();
-    // Stable reference between renders: a new array would make the chart redraw every time
+    // Stable references between renders: a new array would make the charts redraw every time
     const amountByStatus = useMemo(() => sumAmountByStatus(invoices), [invoices]);
+    const amountByClient = useMemo(() => sumAmountByClient(invoices), [invoices]);
 
     return (
         <div className="space-y-6 lg:space-y-8">
@@ -61,9 +64,10 @@ export default function DashboardPage() {
                 <div className="space-y-6">
                     <StatsGrid stats={stats} />
                     <div className="grid gap-6 lg:grid-cols-2">
-                        <AmountByStatusChart data={amountByStatus} />
-                        <RecentInvoices invoices={recentInvoices} />
+                        <AmountByClientChart data={amountByClient} />
+                        <CollectionRateChart data={amountByStatus} />
                     </div>
+                    <RecentInvoices invoices={recentInvoices} />
                 </div>
             </QueryState>
         </div>

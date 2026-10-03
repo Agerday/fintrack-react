@@ -40,3 +40,10 @@ export function formatDate(isoString: string): string {
         year: 'numeric',
     });
 }
+
+// ratio from 0 to 1 → "42%"
+export function formatPercent(ratio: number): string {
+    return new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 }).format(
+        ratio,
+    );
+}

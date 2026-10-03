@@ -1,4 +1,5 @@
 import type { InvoiceStatus } from '../types';
+import { statusLabels } from '../status';
 import { cn } from '@/lib/utils';
 
 type InvoiceStatusBadgeProps = {
@@ -9,12 +10,6 @@ const statusStyles: Record<InvoiceStatus, string> = {
     paid: 'bg-status-paid/10 text-status-paid ring-status-paid/20',
     pending: 'bg-status-pending/10 text-status-pending ring-status-pending/25',
     overdue: 'bg-destructive/10 text-destructive ring-destructive/20',
-};
-
-const statusLabels: Record<InvoiceStatus, string> = {
-    paid: 'Paid',
-    pending: 'Pending',
-    overdue: 'Overdue',
 };
 
 export function InvoiceStatusBadge({ status }: InvoiceStatusBadgeProps) {

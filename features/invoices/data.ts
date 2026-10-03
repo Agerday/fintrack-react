@@ -29,4 +29,11 @@ export const invoices: Invoice[] = [
         amount: 980,
         status: 'overdue',
     },
+    {
+        id: 'INV-005',
+        client: 'Initech',
+        date: 'Sep 09, 2026',
+        amount: 2480,
+        status: 'overdue',
+    },
 ];
