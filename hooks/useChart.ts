@@ -13,6 +13,10 @@ function applyThemeFont() {
     themeFontApplied = true;
 }
 
+function isDarkTheme() {
+    return document.documentElement.classList.contains('dark');
+}
+
 // Chart.js is imperative: it draws on a <canvas> it owns. Create it after mount and destroy
 // it in the cleanup (like ngAfterViewInit + ngOnDestroy), otherwise every change would stack
 // a new chart on the same canvas. Only `data` triggers a redraw: createConfig is an effect
@@ -29,9 +33,26 @@ export function useChart<TType extends ChartType>(
         if (!canvas) return;
 
         applyThemeFont();
-        const chart = new Chart(canvas, getConfig());
+        let chart = new Chart(canvas, getConfig());
 
-        return () => chart.destroy();
+        // Canvas colors are resolved once: redraw when the theme class on <html> changes.
+        // Not useTheme(): next-themes sets the class in its own effect, which runs after ours
+        let dark = isDarkTheme();
+        const observer = new MutationObserver(() => {
+            if (isDarkTheme() === dark) return;
+            dark = isDarkTheme();
+            chart.destroy();
+            chart = new Chart(canvas, getConfig());
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+
+        return () => {
+            observer.disconnect();
+            chart.destroy();
+        };
     }, [data]);
 
     return canvasRef;
