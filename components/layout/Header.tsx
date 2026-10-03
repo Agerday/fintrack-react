@@ -1,17 +1,11 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 export function Header() {
     const setMobileOpen = useSidebarStore((state) => state.setMobileOpen);
@@ -32,29 +26,20 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2">
+                <ThemeToggle />
                 <NotificationBell />
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
-                        <div className="hidden text-right sm:block">
-                            <p className="text-sm leading-none font-medium">Adrien Gerday</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Admin</p>
-                        </div>
-                        <Avatar className="size-9">
-                            <AvatarImage src="/avatar.png" alt="Adrien Gerday" />
-                            <AvatarFallback className="bg-accent text-accent-foreground">
-                                AG
-                            </AvatarFallback>
-                        </Avatar>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Settings</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Display only until a profile page exists to link to */}
+                <div className="flex items-center gap-3 px-2">
+                    <div className="hidden text-right sm:block">
+                        <p className="text-sm leading-none font-medium">Adrien Gerday</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Admin</p>
+                    </div>
+                    <Avatar className="size-9">
+                        <AvatarFallback className="bg-accent text-accent-foreground">
+                            AG
+                        </AvatarFallback>
+                    </Avatar>
+                </div>
             </div>
         </header>
     );
