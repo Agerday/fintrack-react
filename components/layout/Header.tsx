@@ -1,11 +1,11 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { ProfileLink } from '@/features/profile/components/ProfileLink';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 export function Header() {
@@ -32,18 +32,7 @@ export function Header() {
                     <NotificationBell />
                 </div>
                 <Separator orientation="vertical" className="h-6 self-center" />
-                {/* Display only until a profile page exists to link to */}
-                <div className="flex items-center gap-2.5">
-                    <Avatar className="size-9">
-                        <AvatarFallback className="bg-accent text-accent-foreground">
-                            AG
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="hidden leading-tight sm:block">
-                        <p className="text-sm font-medium">Adrien Gerday</p>
-                        <p className="text-xs text-muted-foreground">Admin</p>
-                    </div>
-                </div>
+                <ProfileLink />
             </div>
         </header>
     );
