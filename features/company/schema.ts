@@ -9,11 +9,11 @@ export const companySchema = z.object({
     postalCode: z.string().trim().min(1, 'Postal code is required'),
     city: z.string().trim().min(1, 'City is required'),
     country: z.string().trim().min(1, 'Country is required'),
-    // toUpperCase normalizes "be0123456789" before the pattern check, without changing the type
+    // overwrite normalizes "be 0123 456 789" to "BE0123456789" before the pattern check,
+    // without changing the type (unlike transform, which would split input and output types)
     vatNumber: z
         .string()
-        .trim()
-        .toUpperCase()
+        .overwrite((value) => value.replace(/\s/g, '').toUpperCase())
         .regex(vatNumberPattern, 'Enter a valid VAT number (e.g. BE0123456789)'),
 });
 

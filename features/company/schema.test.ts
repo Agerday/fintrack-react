@@ -19,12 +19,13 @@ describe('companySchema', () => {
         expect(parseVat('  be0123456789 ').data?.vatNumber).toBe('BE0123456789');
     });
 
-    it.each(['0123456789', 'BE123', 'BE0123456789012', 'BE 0123 456 789'])(
-        'rejects %s as VAT number',
-        (vatNumber) => {
-            expect(parseVat(vatNumber).error?.issues[0]?.message).toBe(
-                'Enter a valid VAT number (e.g. BE0123456789)',
-            );
-        },
-    );
+    it('accepts a VAT number written with spaces and saves it without them', () => {
+        expect(parseVat('BE 0123 456 789').data?.vatNumber).toBe('BE0123456789');
+    });
+
+    it.each(['0123456789', 'BE123', 'BE0123456789012'])('rejects %s as VAT number', (vatNumber) => {
+        expect(parseVat(vatNumber).error?.issues[0]?.message).toBe(
+            'Enter a valid VAT number (e.g. BE0123456789)',
+        );
+    });
 });
