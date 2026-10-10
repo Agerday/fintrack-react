@@ -10,6 +10,7 @@ import {
     LayoutDashboard,
     Palette,
     Receipt,
+    Settings,
     Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,8 +29,9 @@ const mainNavigation: NavItem[] = [
     { label: 'Clients', href: '/clients', icon: Users },
 ];
 
-// Dev tooling, kept apart from the business pages
+// Configuration and dev tooling, kept apart from the business pages
 const secondaryNavigation: NavItem[] = [
+    { label: 'Settings', href: '/settings', icon: Settings },
     { label: 'App Catalogue', href: '/style-guide', icon: Palette },
 ];
 
