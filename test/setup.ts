@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/react';
 import { server } from './msw/server';
 import { invoiceDb } from './msw/handlers/invoices';
 import { profileDb } from './msw/handlers/profile';
+import { companyDb } from './msw/handlers/company';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -15,6 +16,7 @@ afterEach(() => {
     server.events.removeAllListeners();
     invoiceDb.reset();
     profileDb.reset();
+    companyDb.reset();
     useNotificationStore.getState().clear();
     // clear: call history of vi.fn() / vi.mock() mocks. restore: original methods behind spyOn
     vi.clearAllMocks();
