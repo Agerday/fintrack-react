@@ -72,13 +72,15 @@ describe('useInvoiceEvents', () => {
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ['account'] });
     });
 
-    it('only refreshes the list when an invoice is created', () => {
+    it('refreshes the invoices and the clients they make up when an invoice is created', () => {
         const { invalidate } = renderInvoiceEvents();
         latestSocket().open();
 
         latestSocket().receive({ type: 'invoice.created', id: 'INV-009' });
 
-        expect(invalidate).toHaveBeenCalledExactlyOnceWith({ queryKey: ['invoices'] });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['invoices'] });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['clients'] });
+        expect(invalidate).toHaveBeenCalledTimes(2);
     });
 
     it('ignores the echo of a change made by this same tab', () => {
@@ -98,7 +100,7 @@ describe('useInvoiceEvents', () => {
         latestSocket().receive('not json');
         latestSocket().receive({ type: 'invoice.created', id: 'INV-009' });
 
-        expect(invalidate).toHaveBeenCalledExactlyOnceWith({ queryKey: ['invoices'] });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['invoices'] });
     });
 
     it('reconnects after 1s, then 2s, while the server stays down', () => {

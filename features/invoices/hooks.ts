@@ -1,8 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { createInvoice, deleteInvoice, getInvoice, getInvoices, updateInvoice } from './api';
 import { InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/invoices/schema';
 import { useEffect } from 'react';
 import { parseEvent, TAB_ID, WS_URL } from '@/lib/realtime';
+
+// Clients are derived from invoices (see withInvoiceStats): whatever changes the invoice list
+// changes their counts and totals too
+function refreshInvoiceLists(queryClient: QueryClient) {
+    void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    void queryClient.invalidateQueries({ queryKey: ['clients'] });
+}
 
 export function useInvoices() {
     //Here is only reading (useQuery)
@@ -26,7 +33,7 @@ export function useCreateInvoice() {
         onSuccess: () => {
             //refresh the cache
             // void Ignore promise because we don't need to wait for the response'
-            void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            refreshInvoiceLists(queryClient);
         },
         onError: (error) => {
             console.error('Failed to create invoice:', error);
@@ -42,7 +49,7 @@ export function useUpdateInvoice() {
             updateInvoice(id, data),
         onSuccess: (_data, { id }) => {
             //same here we refresh after updating, the list and the detail page
-            void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            refreshInvoiceLists(queryClient);
             void queryClient.invalidateQueries({ queryKey: ['invoice', id] });
             // Paying an invoice credits the bank account
             void queryClient.invalidateQueries({ queryKey: ['account'] });
@@ -61,7 +68,7 @@ export function useDeleteInvoice() {
         onSuccess: (_data, id) => {
             // the invoice no longer exists, drop its cache instead of refetching a 404
             queryClient.removeQueries({ queryKey: ['invoice', id] });
-            void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            refreshInvoiceLists(queryClient);
         },
         onError: (error) => {
             console.error('Failed to delete invoice:', error);
@@ -96,7 +103,7 @@ export function useInvoiceEvents() {
             socket.onopen = () => {
                 // Events pushed while we were disconnected are lost (the server keeps no history),
                 // so after a REconnection we refetch to catch up
-                if (attempts > 0) void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+                if (attempts > 0) refreshInvoiceLists(queryClient);
                 attempts = 0;
             };
 
@@ -113,7 +120,7 @@ export function useInvoiceEvents() {
 
                 // The event only says WHAT changed (type + id), not the new data:
                 // we invalidate and TanStack Query refetches through the normal API
-                void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+                refreshInvoiceLists(queryClient);
                 if (message.type !== 'invoice.created') {
                     // updated -> the detail page refetches the new values,
                     // deleted -> the refetch gets a 404 and QueryState shows the error
