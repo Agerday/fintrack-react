@@ -7,6 +7,7 @@ import {
     ChevronsLeft,
     ChevronsRight,
     FileText,
+    Landmark,
     LayoutDashboard,
     Palette,
     Receipt,
@@ -27,6 +28,7 @@ const mainNavigation: NavItem[] = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
     { label: 'Invoices', href: '/invoices', icon: FileText },
     { label: 'Clients', href: '/clients', icon: Users },
+    { label: 'Bank account', href: '/account', icon: Landmark },
 ];
 
 // Configuration and dev tooling, kept apart from the business pages
