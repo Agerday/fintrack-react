@@ -14,7 +14,6 @@ function parseVat(vatNumber: string) {
     return companySchema.safeParse({ ...company, vatNumber });
 }
 
-// The formats themselves are covered in rules.test.ts
 describe('companySchema', () => {
     it('saves a VAT number written with separators in its normalized form', () => {
         expect(parseVat(' be 0123.456.789 ').data?.vatNumber).toBe('BE0123456789');
