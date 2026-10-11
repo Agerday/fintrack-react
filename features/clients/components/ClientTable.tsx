@@ -10,22 +10,27 @@ const columns: Column<Client>[] = [
     {
         key: 'name',
         header: 'Client',
-        // Name + email in one cell: the email is secondary info, no need for its own column
+        // Name + email in one cell: the email is secondary info, no need for its own column.
+        // A client only known from its invoices has no contact details yet
         render: (value, client) => (
             <div className="min-w-0">
                 <p className="font-medium">{value}</p>
-                <p className="truncate text-xs font-normal text-muted-foreground">{client.email}</p>
+                <p className="truncate text-xs font-normal text-muted-foreground">
+                    {client.email || 'No contact details'}
+                </p>
             </div>
         ),
     },
     {
         key: 'company',
         header: 'Company',
+        render: (value) => value || '—',
     },
     {
         key: 'phone',
         header: 'Phone',
         className: 'text-muted-foreground tabular-nums',
+        render: (value) => value || '—',
     },
     {
         key: 'invoices',

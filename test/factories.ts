@@ -1,5 +1,5 @@
 import type { Transaction } from '@/features/account/types';
-import type { Client } from '@/features/clients/types';
+import type { ClientRecord } from '@/features/clients/types';
 import type { Invoice } from '@/features/invoices/types';
 
 let invoiceSequence = 0;
@@ -19,7 +19,7 @@ export function buildInvoice(overrides: Partial<Invoice> = {}): Invoice {
 
 let clientSequence = 0;
 
-export function buildClient(overrides: Partial<Client> = {}): Client {
+export function buildClient(overrides: Partial<ClientRecord> = {}): ClientRecord {
     clientSequence += 1;
     return {
         id: `CLI-${String(clientSequence).padStart(3, '0')}`,
@@ -27,8 +27,6 @@ export function buildClient(overrides: Partial<Client> = {}): Client {
         email: `client${clientSequence}@example.com`,
         phone: '+32 470000000',
         company: `Company ${clientSequence}`,
-        invoices: 0,
-        total: 0,
         ...overrides,
     };
 }
