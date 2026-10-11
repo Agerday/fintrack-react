@@ -1,4 +1,5 @@
 import type { Invoice } from '@/features/invoices/types';
+import { sumAmounts } from '@/lib/money';
 import { countries } from './countries';
 import type { ClientFormValues } from './schema';
 import type { Client, ClientRecord } from './types';
@@ -27,41 +28,46 @@ function clientKey(name: string): string {
     return name.trim().toLowerCase();
 }
 
-type InvoiceStats = { name: string; invoices: number; cents: number };
+export type ClientInvoices = { name: string; amounts: number[] };
+
+// The invoice amounts of each client, keyed by clientKey, with the name as first written.
+// Shared by the clients page and the dashboard, so both always agree on who a client is
+export function groupByClient(
+    invoices: Pick<Invoice, 'client' | 'amount'>[],
+): Map<string, ClientInvoices> {
+    const groups = new Map<string, ClientInvoices>();
+    for (const { client, amount } of invoices) {
+        const key = clientKey(client);
+        const group = groups.get(key) ?? { name: client.trim(), amounts: [] };
+        groups.set(key, { ...group, amounts: [...group.amounts, amount] });
+    }
+    return groups;
+}
 
 // A client is whoever invoices are addressed to. Each stored client gets the count and total
 // of its invoices (0 without any), and a name only found on invoices becomes a client too,
-// with no contact details yet. Totals are summed in cents, like balanceOf in account/rules.ts
+// with no contact details yet
 export function withInvoiceStats(
     clients: ClientRecord[],
     invoices: Pick<Invoice, 'client' | 'amount'>[],
 ): Client[] {
-    const stats = new Map<string, InvoiceStats>();
-    for (const { client, amount } of invoices) {
-        const key = clientKey(client);
-        const current = stats.get(key) ?? { name: client.trim(), invoices: 0, cents: 0 };
-        stats.set(key, {
-            ...current,
-            invoices: current.invoices + 1,
-            cents: current.cents + Math.round(amount * 100),
-        });
-    }
+    const groups = groupByClient(invoices);
 
     const known = clients.map((client) => {
-        const own = stats.get(clientKey(client.name));
-        return { ...client, invoices: own?.invoices ?? 0, total: (own?.cents ?? 0) / 100 };
+        const amounts = groups.get(clientKey(client.name))?.amounts ?? [];
+        return { ...client, invoices: amounts.length, total: sumAmounts(amounts) };
     });
     const knownKeys = new Set(clients.map((client) => clientKey(client.name)));
-    const invoiceOnly = [...stats]
+    const invoiceOnly = [...groups]
         .filter(([key]) => !knownKeys.has(key))
-        .map(([key, own]) => ({
+        .map(([key, { name, amounts }]) => ({
             id: `invoice-client:${key}`,
-            name: own.name,
+            name,
             email: '',
             phone: '',
             company: '',
-            invoices: own.invoices,
-            total: own.cents / 100,
+            invoices: amounts.length,
+            total: sumAmounts(amounts),
         }));
     return [...known, ...invoiceOnly];
 }

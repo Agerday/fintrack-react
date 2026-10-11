@@ -35,6 +35,15 @@ describe('collectionRate', () => {
 });
 
 describe('sumAmountByClient', () => {
+    it('groups a client whatever the case and spacing of its name, like the clients page', () => {
+        const invoices = [
+            buildInvoice({ client: 'Acme', amount: 300 }),
+            buildInvoice({ client: ' acme ', amount: 200 }),
+        ];
+
+        expect(sumAmountByClient(invoices)).toEqual([{ client: 'Acme', total: 500 }]);
+    });
+
     it('adds up the amounts of each client, highest first', () => {
         const invoices = [
             buildInvoice({ client: 'Initech', amount: 500 }),

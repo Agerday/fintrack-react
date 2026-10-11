@@ -1,5 +1,7 @@
+import { groupByClient } from '@/features/clients/rules';
 import { invoiceStatuses } from '@/features/invoices/schema';
 import type { Invoice, InvoiceStatus } from '@/features/invoices/types';
+import { sumAmounts } from '@/lib/money';
 
 // Business rules of the dashboard: pure functions, no React / fetch / store (see invoices/rules.ts)
 
@@ -10,33 +12,30 @@ export type AmountByStatus = { status: InvoiceStatus; total: number }[];
 export function sumAmountByStatus(invoices: Pick<Invoice, 'amount' | 'status'>[]): AmountByStatus {
     return invoiceStatuses.map((status) => ({
         status,
-        total: invoices
-            .filter((invoice) => invoice.status === status)
-            .reduce((sum, invoice) => sum + invoice.amount, 0),
+        total: sumAmounts(
+            invoices.filter((invoice) => invoice.status === status).map(({ amount }) => amount),
+        ),
     }));
 }
 
 // Share of the invoiced amount already paid, from 0 to 1. 0 when nothing is invoiced
 // (not NaN from 0 / 0, which would break the gauge)
 export function collectionRate(amountByStatus: AmountByStatus): number {
-    const invoiced = amountByStatus.reduce((sum, { total }) => sum + total, 0);
+    const invoiced = sumAmounts(amountByStatus.map(({ total }) => total));
     const paid = amountByStatus.find(({ status }) => status === 'paid')?.total ?? 0;
     return invoiced === 0 ? 0 : paid / invoiced;
 }
 
 export type AmountByClient = { client: string; total: number }[];
 
-// Biggest clients first, capped so the chart stays readable with many clients
+// Biggest clients first, capped so the chart stays readable with many clients.
+// Grouped like the clients page, so a client is one bar here and one row there
 export function sumAmountByClient(
     invoices: Pick<Invoice, 'amount' | 'client'>[],
     limit = 5,
 ): AmountByClient {
-    const totals = new Map<string, number>();
-    for (const { client, amount } of invoices) {
-        totals.set(client, (totals.get(client) ?? 0) + amount);
-    }
-    return [...totals]
-        .map(([client, total]) => ({ client, total }))
+    return [...groupByClient(invoices).values()]
+        .map(({ name, amounts }) => ({ client: name, total: sumAmounts(amounts) }))
         .sort((a, b) => b.total - a.total)
         .slice(0, limit);
 }
