@@ -37,8 +37,6 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
     const emailValue = useWatch({ control, name: 'email', defaultValue: '' });
     const debouncedEmail = useDebounce(emailValue, 500);
     const { data: emailCheck, isFetching: checkingEmail } = useCheckEmail(debouncedEmail);
-    // The check answers for the debounced email: while the user is still typing it is about a
-    // previous value and must not block the form. The server checks again on submit anyway
     const emailTaken = debouncedEmail === emailValue && !checkingEmail && emailCheck?.exists;
 
     function onSubmit(data: ClientFormValues) {
@@ -56,7 +54,6 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
     const globalErrorMessage =
         error instanceof ApiError && !error.field ? error.message : undefined;
 
-    // The async "already registered" check is shown like a regular field error
     const emailError =
         errors.email?.message ?? (emailTaken ? 'This email is already registered.' : undefined);
 
