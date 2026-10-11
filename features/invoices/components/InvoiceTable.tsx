@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { Invoice } from '../types';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { InvoiceActions } from './InvoiceActions';
-import { Column, DataTable } from '@/components/ui/DataTable';
+import { type Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { useInvoiceEvents, useInvoices } from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';

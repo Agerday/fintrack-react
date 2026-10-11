@@ -1,18 +1,18 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { createInvoice, deleteInvoice, getInvoice, getInvoices, updateInvoice } from './api';
-import { InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/invoices/schema';
+import { type InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/invoices/schema';
 import { useEffect } from 'react';
 import { parseEvent, TAB_ID, WS_URL } from '@/lib/realtime';
 
 // Clients are derived from invoices (see withInvoiceStats): whatever changes the invoice list
 // changes their counts and totals too
+// `void`: nothing waits for the refetch, the lists update when it lands
 function refreshInvoiceLists(queryClient: QueryClient) {
     void queryClient.invalidateQueries({ queryKey: ['invoices'] });
     void queryClient.invalidateQueries({ queryKey: ['clients'] });
 }
 
 export function useInvoices() {
-    //Here is only reading (useQuery)
     return useQuery({ queryKey: ['invoices'], queryFn: getInvoices });
 }
 
@@ -24,17 +24,11 @@ export function useInvoice(id: string) {
 }
 
 export function useCreateInvoice() {
-    //Use the queryClient when writing because we need to access the cache
-    // to invalidate the invoices query
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: createInvoice,
-        onSuccess: () => {
-            //refresh the cache
-            // void Ignore promise because we don't need to wait for the response'
-            refreshInvoiceLists(queryClient);
-        },
+        onSuccess: () => refreshInvoiceLists(queryClient),
         onError: (error) => {
             console.error('Failed to create invoice:', error);
         },
@@ -48,7 +42,6 @@ export function useUpdateInvoice() {
         mutationFn: ({ id, data }: { id: string; data: InvoiceFormUpdateValues }) =>
             updateInvoice(id, data),
         onSuccess: (_data, { id }) => {
-            //same here we refresh after updating, the list and the detail page
             refreshInvoiceLists(queryClient);
             void queryClient.invalidateQueries({ queryKey: ['invoice', id] });
             // Paying an invoice credits the bank account

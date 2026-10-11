@@ -21,7 +21,7 @@ const samples: NewNotification[] = [
     {
         type: 'warning',
         title: 'Invoice INV-004 is overdue',
-        message: 'Initech has not paid $980.00, due 3 days ago.',
+        message: 'Soylent Corp. has not paid $3,200.00.',
         href: '/invoices/INV-004',
     },
     {

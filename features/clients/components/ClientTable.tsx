@@ -1,7 +1,7 @@
 'use client';
 
-import { Client } from '@/features/clients/types';
-import { Column, DataTable } from '@/components/ui/DataTable';
+import type { Client } from '@/features/clients/types';
+import { type Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency } from '@/lib/formatters';
 import { QueryState } from '@/components/shared/QueryState';
 import { useClients } from '@/features/clients/hooks';

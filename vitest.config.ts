@@ -1,9 +1,9 @@
-import {configDefaults, defineConfig} from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { configDefaults, defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 // e2e/ holds the Playwright specs, run by `npm run test:e2e`, never by Vitest
-const exclude = [...configDefaults.exclude, 'e2e/**']
+const exclude = [...configDefaults.exclude, 'e2e/**'];
 
 export default defineConfig({
     plugins: [react()],
@@ -23,7 +23,7 @@ export default defineConfig({
             },
             {
                 extends: true,
-                test: {name: 'int', include: ['**/*.int.test.{ts,tsx}'], exclude},
+                test: { name: 'int', include: ['**/*.int.test.{ts,tsx}'], exclude },
             },
         ],
     },
@@ -32,4 +32,4 @@ export default defineConfig({
             '@': path.resolve(__dirname, './'),
         },
     },
-})
+});

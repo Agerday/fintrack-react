@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FormError, FormField } from '@/components/shared/FormField';
 import { useCreateInvoice } from '@/features/invoices/hooks';
-import { InvoiceFormValues, invoiceSchema } from '@/features/invoices/schema';
+import { type InvoiceFormValues, invoiceSchema } from '@/features/invoices/schema';
 import { ApiError } from '@/lib/api-error';
 import { formatAmount } from '@/lib/formatters';
 

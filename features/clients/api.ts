@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api-client';
 import type { Client } from './types';
-import { ClientFormValues } from '@/features/clients/schema';
+import type { ClientFormValues } from '@/features/clients/schema';
 
 export function getClients() {
     return apiClient<Client[]>('/clients');

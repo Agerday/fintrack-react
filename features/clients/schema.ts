@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { countries, CountryCode } from '@/features/clients/countries';
+import { countries, type CountryCode } from '@/features/clients/countries';
 
 const countryCodes = countries.map((c) => c.code) as [CountryCode, ...CountryCode[]];
 

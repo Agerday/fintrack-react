@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api-client';
 import type { Invoice } from './types';
-import { InvoiceFormValues, InvoiceFormUpdateValues } from '@/features/invoices/schema';
+import type { InvoiceFormValues, InvoiceFormUpdateValues } from '@/features/invoices/schema';
 
 export function getInvoices() {
     return apiClient<Invoice[]>('/invoices');
