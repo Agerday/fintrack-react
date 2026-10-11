@@ -42,7 +42,7 @@ describe('CompanyForm', () => {
         const vat = await screen.findByLabelText('VAT number');
 
         await user.clear(vat);
-        await user.type(vat, 'BE9999999999');
+        await user.type(vat, 'BE1999999999');
         await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
         expect(await screen.findByText('This VAT number is not registered')).toBeInTheDocument();
