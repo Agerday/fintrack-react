@@ -1,6 +1,3 @@
-// Business rules of the company profile: pure functions, no React / fetch / store
-// (see invoices/rules.ts)
-
 type VatFormat = { pattern: RegExp; example: string };
 
 // EU VAT number formats after the country prefix, as checked by the EU VIES service.
