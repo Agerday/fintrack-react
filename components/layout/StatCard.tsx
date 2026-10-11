@@ -7,7 +7,8 @@ export type StatCardProps = {
     label: string;
     value: number;
     valueType?: 'number' | 'currency';
-    change: string;
+    // Trend vs last month, hidden when there is no history to compare with
+    change?: string;
     icon: LucideIcon;
 };
 
@@ -34,13 +35,15 @@ export function StatCard({
                 {formattedValue}
             </p>
 
-            <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-0.5 font-medium text-success">
-                    <TrendingUp className="size-3.5" />
-                    {change}
-                </span>
-                from last month
-            </p>
+            {change && (
+                <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-0.5 font-medium text-success">
+                        <TrendingUp className="size-3.5" />
+                        {change}
+                    </span>
+                    from last month
+                </p>
+            )}
         </Card>
     );
 }
