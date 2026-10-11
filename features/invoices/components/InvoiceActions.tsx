@@ -16,8 +16,6 @@ type InvoiceActionsProps = {
     onDeleted?: () => void;
 };
 
-// "Mark as paid" + "Delete" (with confirmation), both only on unpaid invoices. Each instance
-// owns its mutations, so the pending state is per row instead of shared by the whole table
 export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: InvoiceActionsProps) {
     const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
     const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
