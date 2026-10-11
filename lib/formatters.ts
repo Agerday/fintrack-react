@@ -54,3 +54,12 @@ export function formatInitials(name: string): string {
     const last = words.length > 1 ? (words[words.length - 1]?.[0] ?? '') : '';
     return (first + last).toUpperCase();
 }
+
+// Ledger amounts: "+$2,400.00" for a credit, "-$150.00" for a debit
+export function formatSignedCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        signDisplay: 'exceptZero',
+    }).format(amount);
+}

@@ -1,3 +1,4 @@
+import type { Transaction } from '@/features/account/types';
 import type { Client } from '@/features/clients/types';
 import type { Invoice } from '@/features/invoices/types';
 
@@ -28,6 +29,20 @@ export function buildClient(overrides: Partial<Client> = {}): Client {
         company: `Company ${clientSequence}`,
         invoices: 0,
         total: 0,
+        ...overrides,
+    };
+}
+
+let transactionSequence = 0;
+
+export function buildTransaction(overrides: Partial<Transaction> = {}): Transaction {
+    transactionSequence += 1;
+    return {
+        id: `TRX-${String(transactionSequence).padStart(3, '0')}`,
+        date: '2026-09-01T00:00:00.000Z',
+        type: 'invoice_payment',
+        label: `Payment ${transactionSequence}`,
+        amount: 100,
         ...overrides,
     };
 }

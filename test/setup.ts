@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './msw/server';
+import { accountDb } from './msw/handlers/account';
 import { invoiceDb } from './msw/handlers/invoices';
 import { profileDb } from './msw/handlers/profile';
 import { companyDb } from './msw/handlers/company';
@@ -15,6 +16,7 @@ afterEach(() => {
     server.resetHandlers();
     server.events.removeAllListeners();
     invoiceDb.reset();
+    accountDb.reset();
     profileDb.reset();
     companyDb.reset();
     useNotificationStore.getState().clear();
