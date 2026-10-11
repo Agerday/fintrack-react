@@ -3,7 +3,12 @@ import { accountStore } from '@/app/api/account/store';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { paymentTransaction } from '@/features/account/rules';
 import { invoiceUpdateSchema } from '@/features/invoices/schema';
-import { canChangeStatus, canDeleteInvoice, isNewPayment } from '@/features/invoices/rules';
+import {
+    canChangeStatus,
+    canDeleteInvoice,
+    canEditInvoice,
+    isNewPayment,
+} from '@/features/invoices/rules';
 import { HttpError } from '@/lib/http-error';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { findOrThrow } from '@/lib/find-or-throw';
@@ -26,6 +31,9 @@ export const PATCH = withErrorHandling(
         const invoice = findOrThrow(invoiceStore.invoices, id, 'Invoice');
         if (data.status && !canChangeStatus(invoice.status, data.status)) {
             throw new HttpError(409, 'A paid invoice cannot change status');
+        }
+        if (!canEditInvoice(invoice.status, data)) {
+            throw new HttpError(409, 'A paid invoice cannot be edited');
         }
         const updated = { ...invoice, ...data };
 

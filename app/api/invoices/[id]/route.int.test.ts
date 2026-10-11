@@ -102,6 +102,18 @@ describe('/api/invoices/[id]', () => {
             expect(publishEvent).not.toHaveBeenCalled();
         });
 
+        it('refuses to change the amount of a paid invoice with a 409, as the account was credited', async () => {
+            const paid = buildInvoice({ status: 'paid', amount: 2400 });
+            invoiceStore.invoices = [paid];
+
+            const response = await PATCH(patchRequest({ amount: 1 }), context(paid.id));
+
+            expect(response.status).toBe(409);
+            expect(await response.json()).toEqual({ message: 'A paid invoice cannot be edited' });
+            expect(invoiceStore.invoices).toEqual([paid]);
+            expect(publishEvent).not.toHaveBeenCalled();
+        });
+
         it('returns a 404 for an unknown id', async () => {
             const response = await PATCH(patchRequest({ status: 'paid' }), context('INV-UNKNOWN'));
 

@@ -2,7 +2,12 @@ import { http, HttpResponse, ws } from 'msw';
 import type { z } from 'zod';
 import { invoiceSchema, invoiceUpdateSchema } from '@/features/invoices/schema';
 import { paymentTransaction } from '@/features/account/rules';
-import { canChangeStatus, canDeleteInvoice, isNewPayment } from '@/features/invoices/rules';
+import {
+    canChangeStatus,
+    canDeleteInvoice,
+    canEditInvoice,
+    isNewPayment,
+} from '@/features/invoices/rules';
 import type { Invoice } from '@/features/invoices/types';
 import { WS_URL } from '@/lib/realtime';
 import { buildInvoice } from '@/test/factories';
@@ -65,6 +70,12 @@ export const invoiceHandlers = [
         if (result.data.status && !canChangeStatus(invoice.status, result.data.status)) {
             return HttpResponse.json(
                 { message: 'A paid invoice cannot change status' },
+                { status: 409 },
+            );
+        }
+        if (!canEditInvoice(invoice.status, result.data)) {
+            return HttpResponse.json(
+                { message: 'A paid invoice cannot be edited' },
                 { status: 409 },
             );
         }

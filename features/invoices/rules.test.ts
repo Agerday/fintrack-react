@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { canChangeStatus, createInvoice, isNewPayment, recentInvoices } from './rules';
+import {
+    canChangeStatus,
+    canEditInvoice,
+    createInvoice,
+    isNewPayment,
+    recentInvoices,
+} from './rules';
 import { buildInvoice } from '@/test/factories';
 
 describe('createInvoice', () => {
@@ -26,6 +32,21 @@ describe('canChangeStatus', () => {
     it('never lets a paid invoice go back to unpaid', () => {
         expect(canChangeStatus('paid', 'pending')).toBe(false);
         expect(canChangeStatus('paid', 'overdue')).toBe(false);
+    });
+});
+
+describe('canEditInvoice', () => {
+    it('lets the client and amount of an unpaid invoice change', () => {
+        expect(canEditInvoice('pending', { client: 'Globex', amount: 10 })).toBe(true);
+    });
+
+    it('freezes the client and amount of a paid invoice, as the account holds its amount', () => {
+        expect(canEditInvoice('paid', { amount: 10 })).toBe(false);
+        expect(canEditInvoice('paid', { client: 'Globex' })).toBe(false);
+    });
+
+    it('still accepts a status-only update on a paid invoice', () => {
+        expect(canEditInvoice('paid', {})).toBe(true);
     });
 });
 

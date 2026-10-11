@@ -19,6 +19,15 @@ export function canChangeStatus(from: InvoiceStatus, to: InvoiceStatus): boolean
     return from !== 'paid' || to === 'paid';
 }
 
+// The account was credited with the amount of a paid invoice, for this client: changing either
+// would leave the account out of step with the invoice. Status-only updates stay allowed
+export function canEditInvoice(
+    status: InvoiceStatus,
+    changes: Partial<Pick<Invoice, 'client' | 'amount'>>,
+): boolean {
+    return status !== 'paid' || (changes.client === undefined && changes.amount === undefined);
+}
+
 // Invoices are stored in creation order: the last ones are the newest
 export function recentInvoices<T>(invoices: T[], count = 5): T[] {
     return invoices.slice(-count).reverse();
