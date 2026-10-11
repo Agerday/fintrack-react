@@ -4,9 +4,6 @@ import { type InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/inv
 import { useEffect } from 'react';
 import { parseEvent, TAB_ID, WS_URL } from '@/lib/realtime';
 
-// Clients are derived from invoices (see withInvoiceStats): whatever changes the invoice list
-// changes their counts and totals too
-// `void`: nothing waits for the refetch, the lists update when it lands
 function refreshInvoiceLists(queryClient: QueryClient) {
     void queryClient.invalidateQueries({ queryKey: ['invoices'] });
     void queryClient.invalidateQueries({ queryKey: ['clients'] });
