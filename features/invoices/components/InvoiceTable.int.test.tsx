@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { InvoiceTable } from './InvoiceTable';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { server } from '@/test/msw/server';
 import { invoiceDb, invoiceEvents } from '@/test/msw/handlers/invoices';
 import { buildInvoice } from '@/test/factories';
@@ -69,6 +70,34 @@ describe('InvoiceTable', () => {
         expect(
             within(await findRow(invoice.id)).queryByRole('button', { name: 'Mark as paid' }),
         ).not.toBeInTheDocument();
+    });
+
+    it('tells the user why an invoice could not be marked as paid', async () => {
+        const invoice = buildInvoice({ status: 'pending' });
+        invoiceDb.invoices = [invoice];
+        server.use(
+            http.patch('/api/invoices/:id', () =>
+                HttpResponse.json(
+                    { message: 'A paid invoice cannot change status' },
+                    { status: 409 },
+                ),
+            ),
+        );
+        const { user } = renderWithClient(
+            <>
+                <NotificationBell />
+                <InvoiceTable />
+            </>,
+        );
+
+        await user.click(
+            within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
+        );
+        await user.click(await screen.findByRole('button', { name: 'Notifications (1 unread)' }));
+
+        const panel = await screen.findByRole('dialog');
+        expect(within(panel).getByText(`Could not mark ${invoice.id} as paid`)).toBeInTheDocument();
+        expect(within(panel).getByText('A paid invoice cannot change status')).toBeInTheDocument();
     });
 
     it('keeps the invoice when the user cancels the deletion', async () => {

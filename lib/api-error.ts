@@ -6,8 +6,12 @@ export class ApiError extends Error {
     field?: string;
 
     constructor(status: number, code: ErrorCode, field?: string, serverMessage?: string) {
-        // field validation errors (400) keep the precise server message, everything else uses our the mapping
-        const useServerMessage = code === ErrorCode.BAD_REQUEST && field && serverMessage;
+        // Field validation errors (400) and business-rule conflicts (409 without a field, e.g.
+        // "A paid invoice cannot be deleted") keep the precise server message. Everything else
+        // uses our mapping: a duplicate field (409 + field) reads better as "This email is already registered."
+        const useServerMessage =
+            serverMessage &&
+            ((code === ErrorCode.BAD_REQUEST && field) || (code === ErrorCode.CONFLICT && !field));
         super(useServerMessage ? serverMessage : getErrorMessage(code, field));
         this.status = status;
         this.code = code;

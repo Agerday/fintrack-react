@@ -6,6 +6,7 @@ import { useDeleteInvoice, useUpdateInvoice } from '@/features/invoices/hooks';
 import { canDeleteInvoice } from '@/features/invoices/rules';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { cn } from '@/lib/utils';
 
 type InvoiceActionsProps = {
@@ -20,7 +21,13 @@ type InvoiceActionsProps = {
 export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: InvoiceActionsProps) {
     const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
     const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
+    const notify = useNotificationStore((state) => state.add);
     const compact = variant === 'compact';
+
+    // A table row has no room for an error message: the failure goes to the notification bell
+    function reportFailure(title: string) {
+        return (error: Error) => notify({ type: 'error', title, message: error.message });
+    }
 
     return (
         <div className={cn('flex items-center justify-end gap-1', !compact && 'gap-2')}>
@@ -32,7 +39,12 @@ export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: Invo
                     aria-label="Mark as paid"
                     title="Mark as paid"
                     className={cn(!compact && 'flex-1 sm:flex-none')}
-                    onClick={() => markAsPaid({ id: invoice.id, data: { status: 'paid' } })}
+                    onClick={() =>
+                        markAsPaid(
+                            { id: invoice.id, data: { status: 'paid' } },
+                            { onError: reportFailure(`Could not mark ${invoice.id} as paid`) },
+                        )
+                    }
                 >
                     <Check />
                     {!compact && 'Mark as paid'}
@@ -49,6 +61,10 @@ export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: Invo
                             onSuccess: () => {
                                 close();
                                 onDeleted?.();
+                            },
+                            onError: (error) => {
+                                close();
+                                reportFailure(`Could not delete ${invoice.id}`)(error);
                             },
                         })
                     }
