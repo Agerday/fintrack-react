@@ -5,6 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
 // Angular analogy: Protractor / Cypress. See https://playwright.dev/docs/test-configuration
 export default defineConfig({
     testDir: './e2e',
+    // Compiles every route once before the tests, see e2e/global-setup.ts
+    globalSetup: './e2e/global-setup.ts',
     // Tests run in parallel workers, so they must not depend on each other: each test
     // creates its own invoice (unique name) instead of relying on the seed data
     fullyParallel: true,
