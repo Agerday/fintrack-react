@@ -7,7 +7,7 @@ import { withErrorHandling } from '@/lib/with-error-handling';
 import { parseBody } from '@/lib/parse-body';
 import { HttpError } from '@/lib/http-error';
 
-// Computed on every read from the current invoices, so the figures can never be stale
+// Computed on every read from the current invoices
 export async function GET() {
     return NextResponse.json(withInvoiceStats(clientStore.clients, invoiceStore.invoices));
 }
@@ -22,8 +22,6 @@ export const POST = withErrorHandling(async (request: Request) => {
     const created = createClient(data, new Date());
     clientStore.clients = [...clientStore.clients, created];
 
-    // The created client, as typed by createClient in api.ts. Its name may already be on
-    // invoices, so it gets their figures like in GET (the record always comes first)
     const [client] = withInvoiceStats([created], invoiceStore.invoices);
     return NextResponse.json(client, { status: 201 });
 });
