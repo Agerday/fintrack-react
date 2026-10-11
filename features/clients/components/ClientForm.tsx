@@ -1,7 +1,7 @@
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCheckEmail, useCreateClient } from '@/features/clients/hooks';
-import { ClientFormValues, clientSchema } from '@/features/clients/schema';
+import { type ClientFormValues, clientSchema } from '@/features/clients/schema';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FormError, FormField } from '@/components/shared/FormField';
@@ -29,7 +29,7 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
         formState: { errors },
     } = useForm<ClientFormValues>({
         resolver: zodResolver(clientSchema),
-        defaultValues: { countryCode: 'KR', company: 'TOP COMPANY' },
+        defaultValues: { countryCode: 'BE' },
     });
 
     const { mutate, isPending, error } = useCreateClient();
@@ -37,9 +37,12 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
     const emailValue = useWatch({ control, name: 'email', defaultValue: '' });
     const debouncedEmail = useDebounce(emailValue, 500);
     const { data: emailCheck, isFetching: checkingEmail } = useCheckEmail(debouncedEmail);
+    // The check answers for the debounced email: while the user is still typing it is about a
+    // previous value and must not block the form. The server checks again on submit anyway
+    const emailTaken = debouncedEmail === emailValue && !checkingEmail && emailCheck?.exists;
 
     function onSubmit(data: ClientFormValues) {
-        if (emailCheck?.exists) return;
+        if (emailTaken) return;
         mutate(data, {
             onSuccess,
             onError: (err) => {
@@ -55,8 +58,7 @@ export function ClientForm({ onSuccess }: ClientFormProps) {
 
     // The async "already registered" check is shown like a regular field error
     const emailError =
-        errors.email?.message ??
-        (!checkingEmail && emailCheck?.exists ? 'This email is already registered.' : undefined);
+        errors.email?.message ?? (emailTaken ? 'This email is already registered.' : undefined);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
