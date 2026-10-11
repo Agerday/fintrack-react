@@ -4,9 +4,6 @@ import { countries } from './countries';
 import type { ClientFormValues } from './schema';
 import type { Client, ClientRecord } from './types';
 
-// Business rules of clients: pure functions, no React / fetch / store (see invoices/rules.ts)
-
-// Emails are unique whatever their case: John@acme.com and john@acme.com are the same client
 export function emailExists(clients: Pick<ClientRecord, 'email'>[], email: string): boolean {
     const normalized = email.toLowerCase();
     return clients.some((client) => client.email.toLowerCase() === normalized);
@@ -23,15 +20,12 @@ export function createClient(data: ClientFormValues, now: Date): ClientRecord {
     };
 }
 
-// An invoice only stores the client name as typed: "Acme" and " acme " are the same client
 function clientKey(name: string): string {
     return name.trim().toLowerCase();
 }
 
 export type ClientInvoices = { name: string; amounts: number[] };
 
-// The invoice amounts of each client, keyed by clientKey, with the name as first written.
-// Shared by the clients page and the dashboard, so both always agree on who a client is
 export function groupByClient(
     invoices: Pick<Invoice, 'client' | 'amount'>[],
 ): Map<string, ClientInvoices> {
@@ -44,9 +38,6 @@ export function groupByClient(
     return groups;
 }
 
-// A client is whoever invoices are addressed to. Each stored client gets the count and total
-// of its invoices (0 without any), and a name only found on invoices becomes a client too,
-// with no contact details yet
 export function withInvoiceStats(
     clients: ClientRecord[],
     invoices: Pick<Invoice, 'client' | 'amount'>[],
