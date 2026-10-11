@@ -63,6 +63,15 @@ describe('useInvoiceEvents', () => {
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ['invoice', 'INV-001'] });
     });
 
+    it('refreshes the bank account when another tab updates an invoice, as it may be paid', () => {
+        const { invalidate } = renderInvoiceEvents();
+        latestSocket().open();
+
+        latestSocket().receive({ type: 'invoice.updated', id: 'INV-001', sourceId: 'other-tab' });
+
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['account'] });
+    });
+
     it('only refreshes the list when an invoice is created', () => {
         const { invalidate } = renderInvoiceEvents();
         latestSocket().open();

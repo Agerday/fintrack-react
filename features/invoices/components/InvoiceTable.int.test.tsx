@@ -106,6 +106,17 @@ describe('InvoiceTable', () => {
         );
     });
 
+    it('offers no delete action on a paid invoice, as its money is on the account', async () => {
+        const invoice = buildInvoice({ status: 'paid' });
+        invoiceDb.invoices = [invoice];
+
+        renderWithClient(<InvoiceTable />);
+
+        expect(
+            within(await findRow(invoice.id)).queryByRole('button', { name: 'Delete invoice' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('shows an invoice created in another tab without reloading', async () => {
         const connected = new Promise<void>((resolve) => {
             server.use(invoiceEvents.addEventListener('connection', () => resolve()));

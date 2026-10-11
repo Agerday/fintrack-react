@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DELETE, GET, PATCH } from './route';
 import { invoiceStore } from '../store';
+import { accountStore } from '@/app/api/account/store';
 import type { Invoice } from '@/features/invoices/types';
 import { publishEvent } from '@/lib/realtime';
 import { buildInvoice } from '@/test/factories';
@@ -32,6 +33,7 @@ describe('/api/invoices/[id]', () => {
     beforeEach(() => {
         invoice = buildInvoice({ status: 'pending' });
         invoiceStore.invoices = [invoice, buildInvoice()];
+        accountStore.transactions = [];
     });
 
     describe('GET', () => {
@@ -57,6 +59,14 @@ describe('/api/invoices/[id]', () => {
             expect(response.status).toBe(200);
             expect(await response.json()).toEqual({ ...invoice, status: 'paid' });
             expect(invoiceStore.invoices[0]).toEqual({ ...invoice, status: 'paid' });
+        });
+
+        it('credits the bank account with the amount of the invoice it marks as paid', async () => {
+            await PATCH(patchRequest({ status: 'paid' }), context(invoice.id));
+
+            expect(accountStore.transactions).toEqual([
+                expect.objectContaining({ amount: invoice.amount, invoiceId: invoice.id }),
+            ]);
         });
 
         it('announces the update to the other tabs', async () => {
@@ -109,6 +119,18 @@ describe('/api/invoices/[id]', () => {
                 type: 'invoice.deleted',
                 id: invoice.id,
             });
+        });
+
+        it('refuses to delete a paid invoice with a 409, as its money is on the account', async () => {
+            const paid = buildInvoice({ status: 'paid' });
+            invoiceStore.invoices = [paid];
+
+            const response = await DELETE(request, context(paid.id));
+
+            expect(response.status).toBe(409);
+            expect(await response.json()).toEqual({ message: 'A paid invoice cannot be deleted' });
+            expect(invoiceStore.invoices).toEqual([paid]);
+            expect(publishEvent).not.toHaveBeenCalled();
         });
 
         it('returns a 404 and deletes nothing for an unknown id', async () => {

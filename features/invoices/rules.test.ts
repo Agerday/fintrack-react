@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canChangeStatus, createInvoice, recentInvoices } from './rules';
+import { canChangeStatus, createInvoice, isNewPayment, recentInvoices } from './rules';
 import { buildInvoice } from '@/test/factories';
 
 describe('createInvoice', () => {
@@ -26,6 +26,22 @@ describe('canChangeStatus', () => {
     it('never lets a paid invoice go back to unpaid', () => {
         expect(canChangeStatus('paid', 'pending')).toBe(false);
         expect(canChangeStatus('paid', 'overdue')).toBe(false);
+    });
+});
+
+describe('isNewPayment', () => {
+    it('counts an unpaid invoice becoming paid as a payment', () => {
+        expect(isNewPayment('pending', 'paid')).toBe(true);
+        expect(isNewPayment('overdue', 'paid')).toBe(true);
+    });
+
+    it('does not count a paid invoice saved as paid again, so it is never credited twice', () => {
+        expect(isNewPayment('paid', 'paid')).toBe(false);
+    });
+
+    it('does not count an update that leaves the invoice unpaid', () => {
+        expect(isNewPayment('pending', 'overdue')).toBe(false);
+        expect(isNewPayment('pending', undefined)).toBe(false);
     });
 });
 

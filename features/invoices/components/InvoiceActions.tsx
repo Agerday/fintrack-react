@@ -3,6 +3,7 @@
 import { Check, Trash2 } from 'lucide-react';
 import type { Invoice } from '../types';
 import { useDeleteInvoice, useUpdateInvoice } from '@/features/invoices/hooks';
+import { canDeleteInvoice } from '@/features/invoices/rules';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { cn } from '@/lib/utils';
@@ -14,8 +15,8 @@ type InvoiceActionsProps = {
     onDeleted?: () => void;
 };
 
-// "Mark as paid" + "Delete" (with confirmation). Each instance owns its mutations,
-// so the pending state is per row instead of shared by the whole table
+// "Mark as paid" + "Delete" (with confirmation), both only on unpaid invoices. Each instance
+// owns its mutations, so the pending state is per row instead of shared by the whole table
 export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: InvoiceActionsProps) {
     const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
     const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
@@ -38,34 +39,36 @@ export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: Invo
                 </Button>
             )}
 
-            <ConfirmDialog
-                title={`Delete invoice ${invoice.id}?`}
-                description="This action cannot be undone."
-                isPending={isDeleting}
-                onConfirm={(close) =>
-                    deleteInvoice(invoice.id, {
-                        onSuccess: () => {
-                            close();
-                            onDeleted?.();
-                        },
-                    })
-                }
-                trigger={
-                    <Button
-                        variant={compact ? 'ghost' : 'destructive'}
-                        size={compact ? 'icon-sm' : 'lg'}
-                        aria-label="Delete invoice"
-                        title="Delete invoice"
-                        className={cn(
-                            compact && 'text-muted-foreground hover:text-destructive',
-                            !compact && 'flex-1 sm:flex-none',
-                        )}
-                    >
-                        <Trash2 />
-                        {!compact && 'Delete'}
-                    </Button>
-                }
-            />
+            {canDeleteInvoice(invoice.status) && (
+                <ConfirmDialog
+                    title={`Delete invoice ${invoice.id}?`}
+                    description="This action cannot be undone."
+                    isPending={isDeleting}
+                    onConfirm={(close) =>
+                        deleteInvoice(invoice.id, {
+                            onSuccess: () => {
+                                close();
+                                onDeleted?.();
+                            },
+                        })
+                    }
+                    trigger={
+                        <Button
+                            variant={compact ? 'ghost' : 'destructive'}
+                            size={compact ? 'icon-sm' : 'lg'}
+                            aria-label="Delete invoice"
+                            title="Delete invoice"
+                            className={cn(
+                                compact && 'text-muted-foreground hover:text-destructive',
+                                !compact && 'flex-1 sm:flex-none',
+                            )}
+                        >
+                            <Trash2 />
+                            {!compact && 'Delete'}
+                        </Button>
+                    }
+                />
+            )}
         </div>
     );
 }

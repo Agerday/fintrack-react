@@ -31,6 +31,25 @@ test.describe('Invoices', () => {
         await expect(invoicesPage.row(client)).toContainText('Paid');
     });
 
+    test('credits the bank account when an invoice is paid', async ({
+        page,
+        client,
+        createInvoice,
+        invoicesPage,
+    }) => {
+        await createInvoice(137);
+        await invoicesPage.goto();
+
+        await invoicesPage.markAsPaid(client);
+        await expect(invoicesPage.row(client)).toContainText('Paid');
+        await page.getByRole('link', { name: 'Bank account' }).click();
+
+        // Matched by the unique client name: other tests pay invoices in parallel
+        await expect(page.getByRole('listitem').filter({ hasText: client })).toContainText(
+            '+$137.00',
+        );
+    });
+
     test('opens the detail page of an invoice', async ({
         page,
         client,

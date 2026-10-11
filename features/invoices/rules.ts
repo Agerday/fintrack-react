@@ -23,3 +23,15 @@ export function canChangeStatus(from: InvoiceStatus, to: InvoiceStatus): boolean
 export function recentInvoices<T>(invoices: T[], count = 5): T[] {
     return invoices.slice(-count).reverse();
 }
+
+// The account is credited once per invoice: only when the status actually changes to paid,
+// not on a repeated paid -> paid update
+export function isNewPayment(from: InvoiceStatus, to: InvoiceStatus | undefined): boolean {
+    return from !== 'paid' && to === 'paid';
+}
+
+// A paid invoice backs a transaction on the bank account: deleting it would leave money
+// with no invoice behind it
+export function canDeleteInvoice(status: InvoiceStatus): boolean {
+    return status !== 'paid';
+}

@@ -44,6 +44,8 @@ export function useUpdateInvoice() {
             //same here we refresh after updating, the list and the detail page
             void queryClient.invalidateQueries({ queryKey: ['invoices'] });
             void queryClient.invalidateQueries({ queryKey: ['invoice', id] });
+            // Paying an invoice credits the bank account
+            void queryClient.invalidateQueries({ queryKey: ['account'] });
         },
         onError: (error) => {
             console.error('Failed to update invoice:', error);
@@ -116,6 +118,10 @@ export function useInvoiceEvents() {
                     // updated -> the detail page refetches the new values,
                     // deleted -> the refetch gets a 404 and QueryState shows the error
                     void queryClient.invalidateQueries({ queryKey: ['invoice', message.id] });
+                }
+                // Another tab may have paid this invoice, which credits the bank account
+                if (message.type === 'invoice.updated') {
+                    void queryClient.invalidateQueries({ queryKey: ['account'] });
                 }
             };
 

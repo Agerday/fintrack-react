@@ -37,7 +37,8 @@ type Fixtures = {
     invoicesPage: InvoicesPage;
 };
 
-// E2E runs against the real server: without this cleanup, test invoices stay in its store
+// E2E runs against the real server: without this cleanup, test invoices stay in its store.
+// Paid invoices are refused (409, their money is on the account) and stay until a restart
 async function deleteInvoicesOf(request: APIRequestContext, client: string) {
     const invoices = (await (await request.get('/api/invoices')).json()) as Invoice[];
     for (const invoice of invoices.filter((i) => i.client === client)) {
