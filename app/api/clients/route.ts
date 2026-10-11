@@ -19,7 +19,11 @@ export const POST = withErrorHandling(async (request: Request) => {
         throw new HttpError(409, 'Email already exists', 'email');
     }
 
-    clientStore.clients = [...clientStore.clients, createClient(data, new Date())];
+    const created = createClient(data, new Date());
+    clientStore.clients = [...clientStore.clients, created];
 
-    return NextResponse.json(clientStore.clients, { status: 201 });
+    // The created client, as typed by createClient in api.ts. Its name may already be on
+    // invoices, so it gets their figures like in GET (the record always comes first)
+    const [client] = withInvoiceStats([created], invoiceStore.invoices);
+    return NextResponse.json(client, { status: 201 });
 });
