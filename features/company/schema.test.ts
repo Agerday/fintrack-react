@@ -14,34 +14,16 @@ function parseVat(vatNumber: string) {
     return companySchema.safeParse({ ...company, vatNumber });
 }
 
+// The formats themselves are covered in rules.test.ts
 describe('companySchema', () => {
-    it('normalizes a lowercase VAT number with surrounding spaces', () => {
-        expect(parseVat('  be0123456789 ').data?.vatNumber).toBe('BE0123456789');
+    it('saves a VAT number written with separators in its normalized form', () => {
+        expect(parseVat(' be 0123.456.789 ').data?.vatNumber).toBe('BE0123456789');
     });
 
-    it('accepts a VAT number written with spaces and saves it without them', () => {
-        expect(parseVat('BE 0123 456 789').data?.vatNumber).toBe('BE0123456789');
-    });
-
-    it.each(['FRAB123456789', 'NL123456789B01', 'DE123456789'])(
-        'accepts %s, in the format of its country',
-        (vatNumber) => {
-            expect(parseVat(vatNumber).success).toBe(true);
-        },
-    );
-
-    it.each([
-        '0123456789',
-        'BE123',
-        'BE0123456789012',
-        // Right overall length, wrong for the country: Belgium needs 10 digits, Germany 9
-        'BE01234567',
-        'DE12345678',
-        // Not an EU country prefix
-        'XX0123456789',
-    ])('rejects %s as VAT number', (vatNumber) => {
-        expect(parseVat(vatNumber).error?.issues[0]?.message).toBe(
-            'Enter a valid VAT number (e.g. BE0123456789)',
-        );
+    it('rejects an invalid VAT number on its field, with the message of its country', () => {
+        expect(parseVat('BE01234567').error?.issues[0]).toMatchObject({
+            path: ['vatNumber'],
+            message: 'Enter a valid BE VAT number (e.g. BE0123456789)',
+        });
     });
 });
