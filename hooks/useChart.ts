@@ -6,7 +6,6 @@ import type { ChartConfiguration, ChartType } from 'chart.js';
 
 let themeFontApplied = false;
 
-// Global Chart.js default, set once. Not at import time: there is no document on the server
 function applyThemeFont() {
     if (themeFontApplied) return;
     Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
