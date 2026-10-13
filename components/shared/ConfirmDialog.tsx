@@ -19,6 +19,7 @@ type ConfirmDialogProps = {
     title: string;
     description: string;
     confirmLabel?: string;
+    pendingLabel?: string;
     // Receives `close` so the dialog can stay open (and show isPending) until the mutation ends
     onConfirm: (close: () => void) => void;
     isPending?: boolean;
@@ -30,6 +31,7 @@ export function ConfirmDialog({
     title,
     description,
     confirmLabel = 'Delete',
+    pendingLabel = 'Deleting...',
     onConfirm,
     isPending = false,
 }: ConfirmDialogProps) {
@@ -50,7 +52,7 @@ export function ConfirmDialog({
                         disabled={isPending}
                         onClick={() => onConfirm(() => setOpen(false))}
                     >
-                        {isPending ? 'Deleting...' : confirmLabel}
+                        {isPending ? pendingLabel : confirmLabel}
                     </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
