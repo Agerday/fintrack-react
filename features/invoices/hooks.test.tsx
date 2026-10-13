@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useInvoiceEvents } from './hooks';
 import { TAB_ID } from '@/lib/realtime';
+import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { renderHookWithClient } from '@/test/render';
 
 // Hand-written instead of MSW's WebSocket support: these tests drive every step of the
@@ -81,6 +82,26 @@ describe('useInvoiceEvents', () => {
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ['invoices'] });
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ['clients'] });
         expect(invalidate).toHaveBeenCalledTimes(2);
+    });
+
+    it('alerts the user when another tab creates an invoice', () => {
+        renderInvoiceEvents();
+        latestSocket().open();
+
+        latestSocket().receive({ type: 'invoice.created', id: 'INV-009', sourceId: 'other-tab' });
+
+        expect(useNotificationStore.getState().notifications).toEqual([
+            expect.objectContaining({ title: 'Invoice INV-009 created' }),
+        ]);
+    });
+
+    it('does not alert the user about a change made in this same tab', () => {
+        renderInvoiceEvents();
+        latestSocket().open();
+
+        latestSocket().receive({ type: 'invoice.created', id: 'INV-009', sourceId: TAB_ID });
+
+        expect(useNotificationStore.getState().notifications).toEqual([]);
     });
 
     it('ignores the echo of a change made by this same tab', () => {

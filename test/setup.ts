@@ -8,6 +8,8 @@ import { invoiceDb } from './msw/handlers/invoices';
 import { profileDb } from './msw/handlers/profile';
 import { companyDb } from './msw/handlers/company';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
+import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
+import { defaultNotificationPreferences } from '@/features/notifications/rules';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 
@@ -22,6 +24,11 @@ afterEach(() => {
     profileDb.reset();
     companyDb.reset();
     useNotificationStore.getState().clear();
+    // Route Handler tests run in node: no localStorage there, and nothing persisted to clear
+    if (typeof window !== 'undefined') {
+        useNotificationPreferencesStore.setState({ preferences: defaultNotificationPreferences });
+        localStorage.clear();
+    }
     // clear: call history of vi.fn() / vi.mock() mocks. restore: original methods behind spyOn
     vi.clearAllMocks();
     vi.restoreAllMocks();

@@ -3,6 +3,9 @@ import { createInvoice, deleteInvoice, getInvoice, getInvoices, updateInvoice } 
 import { type InvoiceFormUpdateValues, invoiceEventSchema } from '@/features/invoices/schema';
 import { useEffect } from 'react';
 import { parseEvent, TAB_ID, WS_URL } from '@/lib/realtime';
+import { invoiceEventNotification } from '@/features/notifications/rules';
+import { useNotificationStore } from '@/lib/store/useNotificationStore';
+import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
 
 function refreshInvoiceLists(queryClient: QueryClient) {
     void queryClient.invalidateQueries({ queryKey: ['invoices'] });
@@ -107,6 +110,13 @@ export function useInvoiceEvents() {
                 }
                 // Echo of this tab's own mutation: its onSuccess already refreshed the cache
                 if (message.sourceId === TAB_ID) return;
+
+                // getState(), not a hook: read when the message arrives, outside render
+                const notification = invoiceEventNotification(
+                    message,
+                    useNotificationPreferencesStore.getState().preferences,
+                );
+                if (notification) useNotificationStore.getState().add(notification);
 
                 // The event only says WHAT changed (type + id), not the new data:
                 // we invalidate and TanStack Query refetches through the normal API

@@ -1,9 +1,10 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { ApiError } from '@/lib/api-error';
+import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(
@@ -23,6 +24,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 },
             }),
     );
+
+    // After hydration, so the first client render matches the server (see the store)
+    useEffect(() => {
+        void useNotificationPreferencesStore.persist.rehydrate();
+    }, []);
 
     return (
         // class strategy: next-themes toggles .dark on <html>, matching @custom-variant dark
