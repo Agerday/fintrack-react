@@ -6,11 +6,19 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { buttonVariants } from '@/components/ui/button';
 import { CompanyForm } from '@/features/company/components/CompanyForm';
+import { DemoDataSettings } from '@/features/demo/components/DemoDataSettings';
+import { NotificationSettings } from '@/features/notifications/components/NotificationSettings';
+import { ProfileForm } from '@/features/profile/components/ProfileForm';
+import { AppearanceSettings } from '@/features/settings/components/AppearanceSettings';
 import { findSettingsSection, settingsSections } from '@/features/settings/sections';
 
 // Sections without an entry here still show the "Coming soon" placeholder
 const sectionForms: Partial<Record<string, ComponentType>> = {
     company: CompanyForm,
+    profile: ProfileForm,
+    appearance: AppearanceSettings,
+    notifications: NotificationSettings,
+    demo: DemoDataSettings,
 };
 
 export function generateStaticParams() {

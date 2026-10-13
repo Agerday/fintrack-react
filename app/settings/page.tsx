@@ -5,7 +5,10 @@ import { settingsSections } from '@/features/settings/sections';
 export default function SettingsPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
-            <PageHeader title="Settings" description="Configure your company and invoicing." />
+            <PageHeader
+                title="Settings"
+                description="Your company, your profile and how FinTrack behaves."
+            />
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {settingsSections.map(({ id, ...section }) => (

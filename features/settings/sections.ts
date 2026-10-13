@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bell, Building2, FileText, Landmark, Percent } from 'lucide-react';
+import { Bell, Building2, DatabaseBackup, Palette, UserRound } from 'lucide-react';
 import type { NavCardTone } from '@/components/shared/NavCard';
 
 export type SettingsSection = {
@@ -14,37 +14,37 @@ export const settingsSections: SettingsSection[] = [
     {
         id: 'company',
         title: 'Company profile',
-        description: 'Name, address, VAT number and logo shown on your invoices.',
+        description: 'Name, address and VAT number of your company.',
         icon: Building2,
         tone: 'chart-1',
     },
     {
-        id: 'invoices',
-        title: 'Invoice defaults',
-        description: 'Numbering format, payment terms and default due date.',
-        icon: FileText,
+        id: 'profile',
+        title: 'Your profile',
+        description: 'Your name, job title and email.',
+        icon: UserRound,
         tone: 'chart-5',
     },
     {
-        id: 'payments',
-        title: 'Bank & payments',
-        description: 'Your IBAN and the payment methods you accept.',
-        icon: Landmark,
+        id: 'appearance',
+        title: 'Appearance',
+        description: 'Light, dark or follow your system.',
+        icon: Palette,
         tone: 'chart-3',
-    },
-    {
-        id: 'taxes',
-        title: 'Taxes',
-        description: 'VAT rates applied to your invoices.',
-        icon: Percent,
-        tone: 'chart-2',
     },
     {
         id: 'notifications',
         title: 'Notifications',
-        description: 'Choose which real-time alerts you receive.',
+        description: 'Real-time alerts when invoices change in another tab.',
         icon: Bell,
         tone: 'chart-4',
+    },
+    {
+        id: 'demo',
+        title: 'Demo data',
+        description: 'Restore the seeded invoices, clients and bank account.',
+        icon: DatabaseBackup,
+        tone: 'chart-2',
     },
 ];
 
