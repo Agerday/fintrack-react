@@ -63,3 +63,23 @@ export function formatSignedCurrency(amount: number): string {
         signDisplay: 'exceptZero',
     }).format(amount);
 }
+
+// Price change: "+1.24%", "-0.50%", "0.00%"
+export function formatSignedPercent(ratio: number): string {
+    return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        signDisplay: 'exceptZero',
+    }).format(ratio);
+}
+
+// Chart axis of live prices: "14:05:32"
+export function formatTime(isoString: string): string {
+    return new Date(isoString).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    });
+}

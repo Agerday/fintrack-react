@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatInitials, formatRelativeTime } from './formatters';
+import { formatDate, formatInitials, formatRelativeTime, formatSignedPercent } from './formatters';
 
 const now = new Date('2026-09-28T12:00:00.000Z');
 
@@ -32,5 +32,13 @@ describe('formatInitials', () => {
         { name: '  Ada   Lovelace ', expected: 'AL' },
     ])('turns "$name" into "$expected"', ({ name, expected }) => {
         expect(formatInitials(name)).toBe(expected);
+    });
+});
+
+describe('formatSignedPercent', () => {
+    it('signs gains and losses but not a flat price', () => {
+        expect(formatSignedPercent(0.0124)).toBe('+1.24%');
+        expect(formatSignedPercent(-0.005)).toBe('-0.50%');
+        expect(formatSignedPercent(0)).toBe('0.00%');
     });
 });
