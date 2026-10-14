@@ -1,6 +1,8 @@
 import type { Transaction } from '@/features/account/types';
 import type { ClientRecord } from '@/features/clients/types';
 import type { Invoice } from '@/features/invoices/types';
+import { orderTotal } from '@/features/trading/rules';
+import type { Order, PendingOrder, Position, PriceTick } from '@/features/trading/types';
 
 let invoiceSequence = 0;
 
@@ -41,6 +43,64 @@ export function buildTransaction(overrides: Partial<Transaction> = {}): Transact
         type: 'invoice_payment',
         label: `Payment ${transactionSequence}`,
         amount: 100,
+        ...overrides,
+    };
+}
+
+let orderSequence = 0;
+
+export function buildOrder(overrides: Partial<Order> = {}): Order {
+    orderSequence += 1;
+    const quantity = overrides.quantity ?? 1;
+    const price = overrides.price ?? 100;
+    return {
+        id: `ORD-${String(orderSequence).padStart(3, '0')}`,
+        date: '2026-09-01T00:00:00.000Z',
+        symbol: 'AAPL',
+        side: 'buy',
+        quantity,
+        price,
+        total: orderTotal(price, quantity),
+        ...overrides,
+    };
+}
+
+// invested defaults to what the held units cost: no sell yet
+export function buildPosition(overrides: Partial<Position> = {}): Position {
+    const quantity = overrides.quantity ?? 1;
+    const averagePrice = overrides.averagePrice ?? 100;
+    return {
+        symbol: 'AAPL',
+        quantity,
+        averagePrice,
+        realizedPnl: 0,
+        invested: orderTotal(averagePrice, quantity),
+        ...overrides,
+    };
+}
+
+let pendingOrderSequence = 0;
+
+export function buildPendingOrder(overrides: Partial<PendingOrder> = {}): PendingOrder {
+    pendingOrderSequence += 1;
+    return {
+        id: `PND-${String(pendingOrderSequence).padStart(3, '0')}`,
+        createdAt: '2026-09-01T00:00:00.000Z',
+        symbol: 'AAPL',
+        type: 'stop_loss',
+        quantity: 1,
+        triggerPrice: 90,
+        ...overrides,
+    };
+}
+
+export function buildPriceTick(overrides: Partial<PriceTick> = {}): PriceTick {
+    return {
+        type: 'price',
+        symbol: 'AAPL',
+        price: 100,
+        open: 100,
+        time: '2026-09-01T10:00:00.000Z',
         ...overrides,
     };
 }

@@ -62,7 +62,7 @@ function TransactionList({ transactions }: TransactionListProps) {
                 <EmptyState
                     icon={ArrowLeftRight}
                     title="No transactions yet"
-                    description="Paid invoices are credited here."
+                    description="Paid invoices and trades show up here."
                     className="m-4 border-none"
                 />
             )}

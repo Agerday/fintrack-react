@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { balanceOf, toAccount } from './rules';
-import { buildTransaction } from '@/test/factories';
+import { balanceOf, toAccount, tradeTransaction } from './rules';
+import { buildOrder, buildTransaction } from '@/test/factories';
 
 describe('balanceOf', () => {
     it('sums the amounts without floating point drift', () => {
@@ -23,5 +23,15 @@ describe('toAccount', () => {
         const account = toAccount([middle, oldest, newest]);
 
         expect(account.transactions).toEqual([newest, middle, oldest]);
+    });
+});
+
+describe('tradeTransaction', () => {
+    it('debits the account for a buy and credits it for a sell', () => {
+        const buy = tradeTransaction(buildOrder({ side: 'buy', quantity: 2, price: 50 }));
+        const sell = tradeTransaction(buildOrder({ side: 'sell', quantity: 2, price: 50 }));
+
+        expect(buy).toMatchObject({ amount: -100, label: 'Bought 2 AAPL' });
+        expect(sell).toMatchObject({ amount: 100, label: 'Sold 2 AAPL' });
     });
 });

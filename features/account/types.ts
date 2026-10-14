@@ -1,5 +1,5 @@
-// Only invoice payments for now: trading will add buy and sell transactions
-export type TransactionType = 'invoice_payment';
+// Invoice payments credit the account, trades debit (buy) or credit (sell) it
+export type TransactionType = 'invoice_payment' | 'trade';
 
 // One line of the bank account ledger. amount is signed: credits > 0, debits < 0
 export type Transaction = {
