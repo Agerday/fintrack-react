@@ -4,6 +4,13 @@ import type { z } from 'zod';
 // WebSocket server (server/ws.ts, `npm run ws`): the API publishes, the socket server broadcasts
 export const WS_PORT = 3001;
 export const WS_URL = `ws://localhost:${WS_PORT}`;
+// The market simulator lives in the same socket server, on its own path so invoice
+// listeners never receive price ticks
+export const MARKET_WS_URL = `${WS_URL}/market`;
+export const MARKET_PRICES_URL = `http://localhost:${WS_PORT}/prices`;
+// The other way round: the socket server reports each tick to the Next API, which fills the
+// stop losses and take profits. Local training only: no auth, like /publish
+export const TRADING_TICKS_URL = 'http://localhost:3000/api/trading/ticks';
 const WS_PUBLISH_URL = `http://localhost:${WS_PORT}/publish`;
 // Publishing is best effort: never let a stuck socket server hold the API response
 const PUBLISH_TIMEOUT_MS = 1000;
@@ -14,12 +21,19 @@ const PUBLISH_TIMEOUT_MS = 1000;
 export const TAB_ID = crypto.randomUUID();
 export const TAB_ID_HEADER = 'X-Tab-Id';
 
+// Which sockets get the event: invoice listeners, or trading pages on the market feed
+export type EventChannel = 'events' | 'market';
+
 // Called from Route Handlers after a mutation. Never throws: if the socket server is down
 // or too slow, the mutation still succeeds, clients just won't be notified in real time
-export async function publishEvent<T extends object>(request: Request, event: T) {
+export async function publishEvent<T extends object>(
+    request: Request,
+    event: T,
+    channel: EventChannel = 'events',
+) {
     const sourceId = request.headers.get(TAB_ID_HEADER) ?? undefined;
     try {
-        await fetch(WS_PUBLISH_URL, {
+        await fetch(channel === 'market' ? `${WS_PUBLISH_URL}/market` : WS_PUBLISH_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...event, sourceId }),
