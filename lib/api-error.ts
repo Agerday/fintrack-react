@@ -26,6 +26,8 @@ export function mapStatusToErrorCode(status: number): ErrorCode {
             return ErrorCode.NOT_FOUND;
         case 409:
             return ErrorCode.CONFLICT;
+        case 503:
+            return ErrorCode.SERVICE_UNAVAILABLE;
         case 500:
             return ErrorCode.SERVER_ERROR;
         default:

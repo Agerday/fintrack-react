@@ -4,6 +4,7 @@ export const ErrorCode = {
     NOT_FOUND: 'NOT_FOUND',
     UNAUTHORIZED: 'UNAUTHORIZED',
     SERVER_ERROR: 'SERVER_ERROR',
+    SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
     UNKNOWN: 'UNKNOWN',
 } as const;
 
@@ -21,6 +22,8 @@ export function getErrorMessage(code: ErrorCode, detail?: string): string {
             return 'The requested resource was not found.';
         case ErrorCode.UNAUTHORIZED:
             return 'You are not authorized to do this.';
+        case ErrorCode.SERVICE_UNAVAILABLE:
+            return 'This service is temporarily unavailable. Try again in a moment.';
         case ErrorCode.SERVER_ERROR:
             return 'Something went wrong on our end.';
         default:
