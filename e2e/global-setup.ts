@@ -11,10 +11,12 @@ const routes = [
     '/invoices/INV-WARMUP',
     '/clients',
     '/account',
+    '/trading',
     '/api/invoices',
     '/api/invoices/INV-WARMUP',
     '/api/clients',
     '/api/account',
+    '/api/trading/positions',
     '/api/profile',
 ];
 
