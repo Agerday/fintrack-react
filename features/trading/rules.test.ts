@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
     applyTick,
     executeOrder,
@@ -214,6 +214,21 @@ describe('fillPendingOrders', () => {
         const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now);
 
         expect(result.orders[0].quantity).toBe(2);
+    });
+
+    it('gives a distinct id to each order filled by the same tick', () => {
+        // Same instant and same random draw: an id built from them would repeat
+        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        const stops = [
+            buildPendingOrder({ quantity: 1, triggerPrice: 95 }),
+            buildPendingOrder({ quantity: 1, triggerPrice: 92 }),
+        ];
+        const state = { positions: [buildPosition({ quantity: 2 })], pendingOrders: stops };
+
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now);
+
+        expect(result.orders).toHaveLength(2);
+        expect(result.orders[0].id).not.toBe(result.orders[1].id);
     });
 
     it('drops the other pending orders of an asset once it is sold out', () => {

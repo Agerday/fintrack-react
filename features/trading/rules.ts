@@ -109,7 +109,7 @@ export function executeOrder(
 
     const order: Order = {
         ...request,
-        id: `ORD-${now.getTime()}-${Math.floor(Math.random() * 1000)}`,
+        id: `ORD-${crypto.randomUUID()}`,
         date: now.toISOString(),
         price,
         total,
@@ -155,7 +155,7 @@ export function pendingOrderRejection(
 export function createPendingOrder(request: PendingOrderRequest, now: Date): PendingOrder {
     return {
         ...request,
-        id: `PND-${now.getTime()}-${Math.floor(Math.random() * 1000)}`,
+        id: `PND-${crypto.randomUUID()}`,
         createdAt: now.toISOString(),
     };
 }
