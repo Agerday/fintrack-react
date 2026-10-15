@@ -3,10 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FormError, FormField } from '@/components/shared/FormField';
+import { MoneyInput } from '@/components/shared/MoneyInput';
 import { useCreateInvoice } from '@/features/invoices/hooks';
 import { type InvoiceFormValues, invoiceSchema } from '@/features/invoices/schema';
 import { ApiError } from '@/lib/api-error';
-import { formatAmount } from '@/lib/formatters';
 
 type InvoiceFormProps = {
     onSuccess?: () => void;
@@ -45,26 +45,7 @@ export function InvoiceForm({ onSuccess }: InvoiceFormProps) {
             </FormField>
 
             <FormField label="Amount" htmlFor="amount" error={errors.amount?.message}>
-                <div className="relative">
-                    <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">
-                        $
-                    </span>
-                    <Input
-                        id="amount"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        {...register('amount', {
-                            valueAsNumber: true,
-                            onBlur: (e) => {
-                                if (e.target.value) e.target.value = formatAmount(e.target.value);
-                            },
-                        })}
-                        placeholder="0.00"
-                        className="pl-6"
-                    />
-                </div>
+                <MoneyInput id="amount" {...register('amount', { valueAsNumber: true })} />
             </FormField>
 
             <FormError message={globalErrorMessage} />
