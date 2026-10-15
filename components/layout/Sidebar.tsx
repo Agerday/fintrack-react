@@ -9,6 +9,7 @@ import {
     FileText,
     Landmark,
     LayoutDashboard,
+    LineChart,
     Palette,
     Receipt,
     Settings,
@@ -29,6 +30,7 @@ const mainNavigation: NavItem[] = [
     { label: 'Invoices', href: '/invoices', icon: FileText },
     { label: 'Clients', href: '/clients', icon: Users },
     { label: 'Bank account', href: '/account', icon: Landmark },
+    { label: 'Live trading', href: '/trading', icon: LineChart },
 ];
 
 // Configuration and dev tooling, kept apart from the business pages
