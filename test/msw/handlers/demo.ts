@@ -4,6 +4,7 @@ import { clientDb } from './clients';
 import { companyDb } from './company';
 import { invoiceDb } from './invoices';
 import { profileDb } from './profile';
+import { tradingDb } from './trading';
 
 // Mirrors app/api/demo/reset. The test dbs' "seed" is their reset state
 export const demoHandlers = [
@@ -13,6 +14,7 @@ export const demoHandlers = [
         accountDb.reset();
         companyDb.reset();
         profileDb.reset();
+        tradingDb.reset();
         return HttpResponse.json({ success: true });
     }),
 ];

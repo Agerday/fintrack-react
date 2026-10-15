@@ -7,6 +7,7 @@ import { clientDb } from './msw/handlers/clients';
 import { invoiceDb } from './msw/handlers/invoices';
 import { profileDb } from './msw/handlers/profile';
 import { companyDb } from './msw/handlers/company';
+import { tradingDb } from './msw/handlers/trading';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
 import { defaultNotificationPreferences } from '@/features/notifications/rules';
@@ -23,6 +24,7 @@ afterEach(() => {
     accountDb.reset();
     profileDb.reset();
     companyDb.reset();
+    tradingDb.reset();
     useNotificationStore.getState().clear();
     // Route Handler tests run in node: no localStorage there, and nothing persisted to clear
     if (typeof window !== 'undefined') {
