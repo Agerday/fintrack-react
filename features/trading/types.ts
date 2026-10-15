@@ -48,7 +48,7 @@ export type Order = {
     trigger?: PendingOrderType;
 };
 
-// A stop loss or take profit waiting for its trigger price
+// A stop loss, take profit or buy limit waiting for its trigger price
 export type PendingOrder = {
     id: string;
     createdAt: string;

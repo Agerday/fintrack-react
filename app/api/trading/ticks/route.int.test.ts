@@ -81,4 +81,21 @@ describe('POST /api/trading/ticks', () => {
         expect(tradingStore.orders).toEqual([]);
         expect(publishEvent).not.toHaveBeenCalled();
     });
+
+    it('fills a crossed buy limit and pays it from the account', async () => {
+        accountStore.transactions = [buildTransaction({ amount: 500 })];
+        tradingStore.positions = [];
+        tradingStore.orders = [];
+        tradingStore.pendingOrders = [
+            buildPendingOrder({ symbol: 'AAPL', type: 'buy_limit', quantity: 2, triggerPrice: 90 }),
+        ];
+
+        await postTick(89.5);
+
+        expect(tradingStore.positions).toEqual([
+            expect.objectContaining({ symbol: 'AAPL', quantity: 2, averagePrice: 89.5 }),
+        ]);
+        expect(balanceOf(accountStore.transactions)).toBe(321);
+        expect(tradingStore.pendingOrders).toEqual([]);
+    });
 });

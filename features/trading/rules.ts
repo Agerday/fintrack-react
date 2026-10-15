@@ -23,7 +23,12 @@ const MIN_PRICE = 0.01;
 export const pendingOrderLabels: Record<PendingOrderType, string> = {
     stop_loss: 'Stop loss',
     take_profit: 'Take profit',
+    buy_limit: 'Buy limit',
 };
+
+export function pendingOrderSide(type: PendingOrderType): TradeSide {
+    return type === 'buy_limit' ? 'buy' : 'sell';
+}
 
 function roundToCents(amount: number): number {
     return Math.round(amount * 100) / 100;
@@ -49,9 +54,24 @@ export function heldQuantity(positions: Position[], symbol: string): number {
     return positions.find((position) => position.symbol === symbol)?.quantity ?? 0;
 }
 
+// Cash promised to the buy limits waiting on the server, at their limit price: the most
+// they can cost, since they fill at that price or lower
+export function reservedCash(pendingOrders: PendingOrder[]): number {
+    return sumAmounts(
+        pendingOrders
+            .filter((pending) => pending.type === 'buy_limit')
+            .map((pending) => orderTotal(pending.triggerPrice, pending.quantity)),
+    );
+}
+
+// What a new buy can spend: the bank balance minus what the buy limits already reserved
+export function availableCash(balance: number, pendingOrders: PendingOrder[]): number {
+    return sumAmounts([balance, -reservedCash(pendingOrders)]);
+}
+
 type OrderRequest = { symbol: string; side: TradeSide; quantity: number };
 
-// Why a market order can't be filled, or null when it can
+// Why a market order can't be filled, or null when it can. cash = availableCash(...)
 export function orderRejection(
     { symbol, side, quantity }: OrderRequest,
     price: number,
@@ -127,13 +147,32 @@ export function executeOrder(
 
 type PendingOrderRequest = Pick<PendingOrder, 'symbol' | 'type' | 'quantity' | 'triggerPrice'>;
 
-// Why a stop loss / take profit can't be placed, with the field to blame, or null.
-// A trigger on the wrong side of the price would fire at once: that's a market order
+type PendingOrderRejection = { field: 'quantity' | 'triggerPrice'; message: string };
+
+// Why a pending order can't be placed, with the field to blame, or null.
+// A trigger on the wrong side of the price would fire at once: that's a market order.
+// cash = availableCash(...): a buy limit reserves its cost, a sell needs the units held
 export function pendingOrderRejection(
     { symbol, type, quantity, triggerPrice }: PendingOrderRequest,
     price: number,
     held: number,
-): { field: 'quantity' | 'triggerPrice'; message: string } | null {
+    cash: number,
+): PendingOrderRejection | null {
+    if (type === 'buy_limit') {
+        if (triggerPrice >= price) {
+            return {
+                field: 'triggerPrice',
+                message: `A buy limit must be below the current price (${formatCurrency(price)})`,
+            };
+        }
+        const total = orderTotal(triggerPrice, quantity);
+        return total > cash
+            ? {
+                  field: 'quantity',
+                  message: `Insufficient funds: this order reserves ${formatCurrency(total)}, you have ${formatCurrency(cash)} available`,
+              }
+            : null;
+    }
     if (quantity > held) {
         return { field: 'quantity', message: `You only hold ${held} ${symbol}` };
     }
@@ -160,25 +199,29 @@ export function createPendingOrder(request: PendingOrderRequest, now: Date): Pen
     };
 }
 
-// <= / >=, not ===: prices jump from tick to tick and rarely land on the trigger exactly
+// <= / >=, not ===: prices jump from tick to tick and rarely land on the trigger exactly.
+// A stop loss and a buy limit wait for a drop, a take profit for a rise
 export function isTriggered(pending: PendingOrder, price: number): boolean {
-    return pending.type === 'stop_loss'
-        ? price <= pending.triggerPrice
-        : price >= pending.triggerPrice;
+    return pending.type === 'take_profit'
+        ? price >= pending.triggerPrice
+        : price <= pending.triggerPrice;
 }
 
 type TradingState = { positions: Position[]; pendingOrders: PendingOrder[] };
 
-// An order filled by a stop loss or take profit, not by the user
+// An order filled by a pending order, not by the user
 export type TriggeredOrder = Order & { trigger: PendingOrderType };
 
 // Runs on every tick: fills the pending orders of that asset whose trigger is crossed, at the
-// tick price. A fill never sells more than what is still held (a manual sell may have come
-// first), and once nothing is left the other pending orders of that asset are dropped
+// tick price. cash = the bank balance, to pay the buy limits.
+// - A sell never sells more than what is still held (a manual sell may have come first), and
+//   once nothing is left the other sell orders of that asset are dropped
+// - A buy limit the balance can't pay for waits for the next tick instead of overdrawing
 export function fillPendingOrders(
     { positions, pendingOrders }: TradingState,
     tick: Pick<PriceTick, 'symbol' | 'price'>,
     now: Date,
+    cash: number,
 ): TradingState & { orders: TriggeredOrder[] } {
     const triggered = pendingOrders.filter(
         (pending) => pending.symbol === tick.symbol && isTriggered(pending, tick.price),
@@ -186,18 +229,29 @@ export function fillPendingOrders(
     if (!triggered.length) return { positions, pendingOrders, orders: [] };
 
     const orders: TriggeredOrder[] = [];
+    const done: PendingOrder[] = [];
     let current = positions;
+    let balance = cash;
     for (const pending of triggered) {
-        const quantity = Math.min(pending.quantity, heldQuantity(current, tick.symbol));
+        const side = pendingOrderSide(pending.type);
+        const quantity =
+            side === 'buy'
+                ? pending.quantity
+                : Math.min(pending.quantity, heldQuantity(current, tick.symbol));
+        if (side === 'buy' && orderTotal(tick.price, quantity) > balance) continue;
+
+        done.push(pending);
         if (quantity === 0) continue;
+
         const result = executeOrder(
             current,
-            { symbol: tick.symbol, side: 'sell', quantity },
+            { symbol: tick.symbol, side, quantity },
             tick.price,
             now,
             pending.type,
         );
         current = result.positions;
+        balance = sumAmounts([balance, side === 'buy' ? -result.order.total : result.order.total]);
         orders.push({ ...result.order, trigger: pending.type });
     }
 
@@ -206,7 +260,12 @@ export function fillPendingOrders(
         positions: current,
         pendingOrders: pendingOrders.filter(
             (pending) =>
-                !triggered.includes(pending) && !(soldOut && pending.symbol === tick.symbol),
+                !done.includes(pending) &&
+                !(
+                    soldOut &&
+                    pending.symbol === tick.symbol &&
+                    pendingOrderSide(pending.type) === 'sell'
+                ),
         ),
         orders,
     };
@@ -269,12 +328,13 @@ export function tradeExecutedEvent(order: TriggeredOrder): TradeExecutedEvent {
     };
 }
 
-// A stop loss is a warning (it cut a loss), a take profit a success
+// A stop loss is a warning (it cut a loss), a take profit or a buy limit a success
 export function tradeExecutedNotification(event: TradeExecutedEvent): NewNotification {
+    const verb = pendingOrderSide(event.trigger) === 'buy' ? 'Bought' : 'Sold';
     return {
         type: event.trigger === 'stop_loss' ? 'warning' : 'success',
         title: `${pendingOrderLabels[event.trigger]} hit on ${event.symbol}`,
-        message: `Sold ${event.quantity} ${event.symbol} at ${formatCurrency(event.price)}`,
+        message: `${verb} ${event.quantity} ${event.symbol} at ${formatCurrency(event.price)}`,
         href: '/trading',
     };
 }

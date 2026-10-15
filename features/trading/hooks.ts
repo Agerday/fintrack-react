@@ -73,8 +73,8 @@ export function useCancelPendingOrder() {
 }
 
 // Opens the market socket while the page is mounted and feeds the live prices into
-// useMarketStore, plus handles the trades the server filled on its own (stop loss / take
-// profit). Not TanStack Query: nothing to fetch, the socket is the only source. Mount it
+// useMarketStore, plus handles the trades the server filled on its own (stop loss, take profit,
+// buy limit). Not TanStack Query: nothing to fetch, the socket is the only source. Mount it
 // once per page; components read the prices with useQuote / useMarketPrices
 export function useMarketFeed() {
     const queryClient = useQueryClient();

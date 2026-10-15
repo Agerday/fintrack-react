@@ -242,6 +242,23 @@ describe('TradingDesk', () => {
         expect(screen.getByRole('button', { name: 'Buy AAPL' })).toBeDisabled();
     });
 
+    it('places a buy limit and keeps the cash it reserves out of the available cash', async () => {
+        accountDb.transactions = [buildTransaction({ amount: 1000 })];
+        tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: 100 })];
+        const { user } = renderWithClient(<TradingDesk />);
+        await within(summaryTile('Available cash')).findByText('$1,000.00');
+
+        await user.click(orderTypeButton('Buy limit'));
+        await user.type(screen.getByLabelText('Quantity to buy'), '3');
+        await user.type(screen.getByLabelText('Limit price'), '90');
+        await user.click(screen.getByRole('button', { name: 'Place buy limit' }));
+
+        expect(
+            await screen.findByText('Buy limit placed: buy 3 AAPL at $90.00'),
+        ).toBeInTheDocument();
+        expect(await within(summaryTile('Available cash')).findByText('$730.00')).toBeVisible();
+    });
+
     it('alerts the user and refreshes the portfolio when a stop loss fires', async () => {
         tradingDb.positions = [buildPosition({ symbol: 'AAPL', quantity: 2 })];
         tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: 100 })];

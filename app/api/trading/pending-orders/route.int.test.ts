@@ -2,8 +2,14 @@
 import { describe, expect, it } from 'vitest';
 import { POST } from './route';
 import { DELETE } from './[id]/route';
+import { accountStore } from '@/app/api/account/store';
 import { tradingStore } from '@/app/api/trading/store';
-import { buildPendingOrder, buildPosition, buildPriceTick } from '@/test/factories';
+import {
+    buildPendingOrder,
+    buildPosition,
+    buildPriceTick,
+    buildTransaction,
+} from '@/test/factories';
 import { tradingDb } from '@/test/msw/handlers/trading';
 
 function postPendingOrder(body: unknown) {
@@ -68,6 +74,44 @@ describe('POST /api/trading/pending-orders', () => {
 
         expect(response.status).toBe(400);
         expect(await response.json()).toMatchObject({ field: 'quantity' });
+    });
+
+    it('places a buy limit the available cash can reserve, without holding the asset', async () => {
+        arrange({ held: 0, price: 100 });
+        accountStore.transactions = [buildTransaction({ amount: 1000 })];
+
+        const response = await postPendingOrder({
+            symbol: 'AAPL',
+            type: 'buy_limit',
+            quantity: 5,
+            triggerPrice: 90,
+        });
+
+        expect(response.status).toBe(201);
+        expect(tradingStore.pendingOrders).toEqual([
+            expect.objectContaining({ type: 'buy_limit', quantity: 5, triggerPrice: 90 }),
+        ]);
+    });
+
+    it('refuses a buy limit when earlier buy limits already reserved the cash', async () => {
+        arrange({ held: 0, price: 100 });
+        accountStore.transactions = [buildTransaction({ amount: 1000 })];
+        tradingStore.pendingOrders = [
+            buildPendingOrder({ type: 'buy_limit', quantity: 10, triggerPrice: 90 }),
+        ];
+
+        const response = await postPendingOrder({
+            symbol: 'AAPL',
+            type: 'buy_limit',
+            quantity: 2,
+            triggerPrice: 90,
+        });
+
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({
+            field: 'quantity',
+            message: 'Insufficient funds: this order reserves $180.00, you have $100.00 available',
+        });
     });
 });
 

@@ -57,6 +57,17 @@ export class TradingPage {
         await this.page.getByLabel('Quantity', { exact: true }).fill(String(quantity));
         await this.page.getByRole('button', { name: `${side} ${symbol}` }).click();
     }
+
+    async placeBuyLimit(symbol: string, quantity: number, limitPrice: number) {
+        await this.market(symbol).click();
+        await this.page
+            .getByRole('group', { name: 'Order type' })
+            .getByRole('button', { name: 'Buy limit' })
+            .click();
+        await this.page.getByLabel('Quantity to buy').fill(String(quantity));
+        await this.page.getByLabel('Limit price').fill(String(limitPrice));
+        await this.page.getByRole('button', { name: 'Place buy limit' }).click();
+    }
 }
 
 // Arranges trades through the API and undoes them after the test: positions and pending

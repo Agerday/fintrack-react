@@ -39,4 +39,18 @@ test.describe('Live trading', () => {
         ).toBeVisible();
         await expect(tradingPage.position('MSFT')).toContainText('Closed');
     });
+
+    test('places a buy limit that waits for its price', async ({ tradingPage, trading }) => {
+        await tradingPage.goto();
+        trading.watch('AMZN');
+
+        await tradingPage.placeBuyLimit('AMZN', 1, 1);
+
+        await expect(
+            tradingPage.page.getByText('Buy limit placed: buy 1 AMZN at $1.00'),
+        ).toBeVisible();
+        await expect(
+            tradingPage.page.getByRole('button', { name: 'Cancel buy limit on AMZN' }).first(),
+        ).toBeVisible();
+    });
 });

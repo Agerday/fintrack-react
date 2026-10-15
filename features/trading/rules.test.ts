@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
     applyTick,
+    availableCash,
     executeOrder,
     fillPendingOrders,
     MAX_TICK_DELAY_MS,
@@ -142,23 +143,27 @@ describe('pendingOrderRejection', () => {
     const takeProfit = { symbol: 'AAPL', type: 'take_profit', quantity: 1 } as const;
 
     it('refuses a stop loss at or above the current price, it would fire at once', () => {
-        expect(pendingOrderRejection({ ...stopLoss, triggerPrice: 100 }, 100, 1)).toEqual({
+        expect(pendingOrderRejection({ ...stopLoss, triggerPrice: 100 }, 100, 1, 0)).toEqual({
             field: 'triggerPrice',
             message: 'A stop loss must be below the current price ($100.00)',
         });
-        expect(pendingOrderRejection({ ...stopLoss, triggerPrice: 99.99 }, 100, 1)).toBeNull();
+        expect(pendingOrderRejection({ ...stopLoss, triggerPrice: 99.99 }, 100, 1, 0)).toBeNull();
     });
 
     it('refuses a take profit at or below the current price', () => {
-        expect(pendingOrderRejection({ ...takeProfit, triggerPrice: 100 }, 100, 1)).toMatchObject({
+        expect(
+            pendingOrderRejection({ ...takeProfit, triggerPrice: 100 }, 100, 1, 0),
+        ).toMatchObject({
             field: 'triggerPrice',
         });
-        expect(pendingOrderRejection({ ...takeProfit, triggerPrice: 100.01 }, 100, 1)).toBeNull();
+        expect(
+            pendingOrderRejection({ ...takeProfit, triggerPrice: 100.01 }, 100, 1, 0),
+        ).toBeNull();
     });
 
     it('refuses to protect more units than the user holds', () => {
         expect(
-            pendingOrderRejection({ ...stopLoss, quantity: 3, triggerPrice: 90 }, 100, 2),
+            pendingOrderRejection({ ...stopLoss, quantity: 3, triggerPrice: 90 }, 100, 2, 0),
         ).toEqual({ field: 'quantity', message: 'You only hold 2 AAPL' });
     });
 });
@@ -171,7 +176,7 @@ describe('fillPendingOrders', () => {
             pendingOrders: [stop],
         };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 94.5 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 94.5 }, now, 0);
 
         expect(result.orders).toEqual([
             expect.objectContaining({
@@ -190,7 +195,7 @@ describe('fillPendingOrders', () => {
         const target = buildPendingOrder({ type: 'take_profit', triggerPrice: 110 });
         const state = { positions: [buildPosition({ quantity: 1 })], pendingOrders: [target] };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 110 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 110 }, now, 0);
 
         expect(result.orders).toEqual([expect.objectContaining({ trigger: 'take_profit' })]);
     });
@@ -202,7 +207,7 @@ describe('fillPendingOrders', () => {
         ];
         const state = { positions: [buildPosition({ quantity: 1 })], pendingOrders };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 95 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 95 }, now, 0);
 
         expect(result.orders).toEqual([]);
         expect(result.pendingOrders).toEqual(pendingOrders);
@@ -212,7 +217,7 @@ describe('fillPendingOrders', () => {
         const stop = buildPendingOrder({ quantity: 5, triggerPrice: 95 });
         const state = { positions: [buildPosition({ quantity: 2 })], pendingOrders: [stop] };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now, 0);
 
         expect(result.orders[0].quantity).toBe(2);
     });
@@ -226,7 +231,7 @@ describe('fillPendingOrders', () => {
         ];
         const state = { positions: [buildPosition({ quantity: 2 })], pendingOrders: stops };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now, 0);
 
         expect(result.orders).toHaveLength(2);
         expect(result.orders[0].id).not.toBe(result.orders[1].id);
@@ -240,9 +245,74 @@ describe('fillPendingOrders', () => {
             pendingOrders: [stop, target],
         };
 
-        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now);
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now, 0);
 
         expect(result.pendingOrders).toEqual([]);
+    });
+
+    it('buys the quantity of a buy limit at the tick price once it drops to the limit', () => {
+        const limit = buildPendingOrder({ type: 'buy_limit', quantity: 2, triggerPrice: 95 });
+        const state = { positions: [], pendingOrders: [limit] };
+
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 94 }, now, 1000);
+
+        expect(result.orders).toEqual([
+            expect.objectContaining({ side: 'buy', quantity: 2, price: 94, trigger: 'buy_limit' }),
+        ]);
+        expect(result.positions).toEqual([
+            expect.objectContaining({ symbol: 'AAPL', quantity: 2, averagePrice: 94 }),
+        ]);
+        expect(result.pendingOrders).toEqual([]);
+    });
+
+    it('keeps a buy limit waiting when the balance can no longer pay for it', () => {
+        const limit = buildPendingOrder({ type: 'buy_limit', quantity: 2, triggerPrice: 95 });
+        const state = { positions: [], pendingOrders: [limit] };
+
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 94 }, now, 100);
+
+        expect(result.orders).toEqual([]);
+        expect(result.pendingOrders).toEqual([limit]);
+    });
+
+    it('keeps the buy limits of an asset once its stop loss sold everything', () => {
+        const stop = buildPendingOrder({ type: 'stop_loss', quantity: 2, triggerPrice: 95 });
+        const limit = buildPendingOrder({ type: 'buy_limit', quantity: 1, triggerPrice: 80 });
+        const state = { positions: [buildPosition({ quantity: 2 })], pendingOrders: [stop, limit] };
+
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now, 0);
+
+        expect(result.pendingOrders).toEqual([limit]);
+    });
+});
+
+describe('availableCash', () => {
+    it('keeps the cash promised to the buy limits out of what a new buy can spend', () => {
+        const pendingOrders = [
+            buildPendingOrder({ type: 'buy_limit', quantity: 2, triggerPrice: 100 }),
+            buildPendingOrder({ type: 'stop_loss', quantity: 5, triggerPrice: 90 }),
+        ];
+
+        expect(availableCash(1000, pendingOrders)).toBe(800);
+    });
+});
+
+describe('pendingOrderRejection of a buy limit', () => {
+    const buyLimit = { symbol: 'AAPL', type: 'buy_limit', quantity: 2 } as const;
+
+    it('refuses a limit at or above the current price, it would fill at once', () => {
+        expect(pendingOrderRejection({ ...buyLimit, triggerPrice: 100 }, 100, 0, 1000)).toEqual({
+            field: 'triggerPrice',
+            message: 'A buy limit must be below the current price ($100.00)',
+        });
+    });
+
+    it('refuses a limit whose cost is more than the available cash', () => {
+        expect(pendingOrderRejection({ ...buyLimit, triggerPrice: 90 }, 100, 0, 179.99)).toEqual({
+            field: 'quantity',
+            message: 'Insufficient funds: this order reserves $180.00, you have $179.99 available',
+        });
+        expect(pendingOrderRejection({ ...buyLimit, triggerPrice: 90 }, 100, 0, 180)).toBeNull();
     });
 });
 

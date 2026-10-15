@@ -34,6 +34,7 @@ Chart.register(
 const levelColors: Record<PendingOrderType, string> = {
     stop_loss: '--destructive',
     take_profit: '--success',
+    buy_limit: '--primary',
 };
 
 type PriceChartProps = {

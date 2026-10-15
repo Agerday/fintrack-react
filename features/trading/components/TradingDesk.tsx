@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { assets } from '../data';
 import { useMarketFeed, useOrders, usePendingOrders, usePositions } from '../hooks';
-import { heldQuantity, portfolioSummary } from '../rules';
+import { availableCash, heldQuantity, portfolioSummary } from '../rules';
 import type { Position } from '../types';
 import { ConnectionBadge } from './ConnectionBadge';
 import { OrderHistory } from './OrderHistory';
@@ -90,7 +90,9 @@ export function TradingDesk() {
 
     // assets is a static, non-empty list and symbol only ever comes from it
     const asset = assets.find((item) => item.symbol === symbol) ?? assets[0];
-    const cash = account?.balance;
+    // Unknown until both are loaded: the balance alone would show cash the buy limits reserved
+    const cash =
+        account && pendingOrders.data && availableCash(account.balance, pendingOrders.data);
 
     return (
         <div className="space-y-6">

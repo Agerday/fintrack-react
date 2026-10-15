@@ -13,7 +13,7 @@ type OrderType = 'market' | PendingOrderType;
 
 type OrderTicketProps = {
     asset: Asset;
-    // Bank balance, undefined while loading
+    // Bank balance minus the cash reserved by the buy limits, undefined while loading
     cash?: number;
     held: number;
 };
@@ -38,6 +38,7 @@ export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
                     onChange={setType}
                     options={[
                         { value: 'market', label: 'Market' },
+                        { value: 'buy_limit', label: pendingOrderLabels.buy_limit },
                         {
                             value: 'stop_loss',
                             label: pendingOrderLabels.stop_loss,
@@ -68,6 +69,7 @@ export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
                             asset={asset}
                             type={type}
                             price={price}
+                            cash={cash}
                             held={held}
                         />
                     )}

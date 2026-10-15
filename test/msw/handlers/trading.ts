@@ -2,6 +2,7 @@ import { http, HttpResponse, ws } from 'msw';
 import type { z } from 'zod';
 import { balanceOf, tradeTransaction } from '@/features/account/rules';
 import {
+    availableCash,
     createPendingOrder,
     executeOrder,
     heldQuantity,
@@ -64,7 +65,7 @@ export const tradingHandlers = [
         const rejection = orderRejection(
             result.data,
             price,
-            balanceOf(accountDb.transactions),
+            availableCash(balanceOf(accountDb.transactions), tradingDb.pendingOrders),
             tradingDb.positions,
         );
         if (rejection) return HttpResponse.json({ message: rejection }, { status: 409 });
@@ -93,6 +94,7 @@ export const tradingHandlers = [
             result.data,
             price,
             heldQuantity(tradingDb.positions, result.data.symbol),
+            availableCash(balanceOf(accountDb.transactions), tradingDb.pendingOrders),
         );
         if (rejection) return badRequest(rejection.message, rejection.field);
 

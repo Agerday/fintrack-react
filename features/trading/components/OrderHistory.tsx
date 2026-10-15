@@ -1,8 +1,7 @@
 import { History } from 'lucide-react';
-import { pendingOrderLabels } from '../rules';
 import type { Order } from '../types';
+import { PendingOrderBadge } from './PendingOrderBadge';
 import { PnlAmount } from './PnlAmount';
-import { Badge } from '@/components/ui/badge';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency, formatDate, formatTime } from '@/lib/formatters';
@@ -21,11 +20,7 @@ const columns: Column<Order>[] = [
         render: (value, order) => (
             <span className="flex items-center gap-2">
                 {value === 'buy' ? 'Buy' : 'Sell'}
-                {order.trigger && (
-                    <Badge variant={order.trigger === 'stop_loss' ? 'destructive' : 'secondary'}>
-                        {pendingOrderLabels[order.trigger]}
-                    </Badge>
-                )}
+                {order.trigger && <PendingOrderBadge type={order.trigger} />}
             </span>
         ),
     },

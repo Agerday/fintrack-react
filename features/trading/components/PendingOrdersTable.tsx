@@ -4,7 +4,7 @@ import { BellRing, X } from 'lucide-react';
 import { useCancelPendingOrder } from '../hooks';
 import { changeRatio, pendingOrderLabels } from '../rules';
 import type { PendingOrder } from '../types';
-import { Badge } from '@/components/ui/badge';
+import { PendingOrderBadge } from './PendingOrderBadge';
 import { Button } from '@/components/ui/button';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -21,11 +21,7 @@ const columns: Column<PendingOrderRow>[] = [
     {
         key: 'type',
         header: 'Type',
-        render: (value) => (
-            <Badge variant={value === 'stop_loss' ? 'destructive' : 'secondary'}>
-                {pendingOrderLabels[value]}
-            </Badge>
-        ),
+        render: (value) => <PendingOrderBadge type={value} />,
     },
     { key: 'quantity', header: 'Quantity', className: 'text-right tabular-nums' },
     {
@@ -74,7 +70,7 @@ export function PendingOrdersTable({ pendingOrders }: PendingOrdersTableProps) {
             <EmptyState
                 icon={BellRing}
                 title="No pending orders"
-                description="Protect a position with a stop loss or lock in a gain with a take profit."
+                description="Protect a position with a stop loss, lock in a gain with a take profit or buy on a dip with a buy limit."
             />
         );
     }

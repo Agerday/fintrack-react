@@ -28,7 +28,7 @@ export function ToggleGroup<T extends string>({
         <div
             role="group"
             aria-label={label}
-            className={cn('grid gap-2', options.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}
+            className={cn('grid gap-2', options.length === 2 ? 'grid-cols-2' : 'grid-cols-3')}
         >
             {options.map((option) => (
                 <Button

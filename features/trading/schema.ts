@@ -4,8 +4,9 @@ import { hasAtMostTwoDecimals } from '@/lib/money';
 export const tradeSides = ['buy', 'sell'] as const;
 export const tradeSideSchema = z.enum(tradeSides);
 
-// Conditional sell orders: they wait on the server and fire when the price crosses the trigger
-export const pendingOrderTypes = ['stop_loss', 'take_profit'] as const;
+// Conditional orders: they wait on the server and fire when the price crosses the trigger.
+// Stop loss and take profit sell what is held, a buy limit buys once the price drops enough
+export const pendingOrderTypes = ['stop_loss', 'take_profit', 'buy_limit'] as const;
 export const pendingOrderTypeSchema = z.enum(pendingOrderTypes);
 
 const quantitySchema = z
@@ -24,14 +25,18 @@ export const orderSchema = z.object({
 
 // Whether the trigger sits on the right side of the live price is checked by the API:
 // only it knows the price at the moment the order lands
+function priceSchema(label: string) {
+    return z
+        .number({ error: `${label} is required` })
+        .positive(`${label} must be greater than 0`)
+        .refine(hasAtMostTwoDecimals, `${label} can have at most 2 decimals`);
+}
+
 export const pendingOrderSchema = z.object({
     symbol: symbolSchema,
     type: pendingOrderTypeSchema,
     quantity: quantitySchema,
-    triggerPrice: z
-        .number({ error: 'Trigger price is required' })
-        .positive('Trigger price must be greater than 0')
-        .refine(hasAtMostTwoDecimals, 'Trigger price can have at most 2 decimals'),
+    triggerPrice: priceSchema('Trigger price'),
 });
 
 // Pushed by the market simulator (server/ws.ts) on ws://.../market, and returned in bulk

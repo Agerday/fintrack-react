@@ -7,7 +7,12 @@ import { tradingStore } from '@/app/api/trading/store';
 import { balanceOf } from '@/features/account/rules';
 import type { Order } from '@/features/trading/types';
 import { MARKET_PRICES_URL } from '@/lib/realtime';
-import { buildPosition, buildPriceTick, buildTransaction } from '@/test/factories';
+import {
+    buildPendingOrder,
+    buildPosition,
+    buildPriceTick,
+    buildTransaction,
+} from '@/test/factories';
 import { server } from '@/test/msw/server';
 import { tradingDb } from '@/test/msw/handlers/trading';
 
@@ -24,6 +29,7 @@ function arrange({ cash = 1000, aaplPrice = 100 } = {}) {
     accountStore.transactions = [buildTransaction({ amount: cash })];
     tradingStore.positions = [];
     tradingStore.orders = [];
+    tradingStore.pendingOrders = [];
     tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: aaplPrice })];
 }
 
@@ -62,6 +68,20 @@ describe('POST /api/trading/orders', () => {
         });
         expect(tradingStore.positions).toEqual([]);
         expect(balanceOf(accountStore.transactions)).toBe(100);
+    });
+
+    it('refuses a buy that would spend the cash reserved by a buy limit', async () => {
+        arrange({ cash: 300, aaplPrice: 100 });
+        tradingStore.pendingOrders = [
+            buildPendingOrder({ type: 'buy_limit', quantity: 2, triggerPrice: 90 }),
+        ];
+
+        const response = await postOrder({ symbol: 'AAPL', side: 'buy', quantity: 2 });
+
+        expect(response.status).toBe(409);
+        expect(await response.json()).toMatchObject({
+            message: 'Insufficient funds: this order costs $200.00, you have $120.00',
+        });
     });
 
     it('refuses to sell an asset the user does not hold', async () => {
