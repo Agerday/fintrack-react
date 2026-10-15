@@ -7,20 +7,22 @@ import { MarketOrderForm } from './MarketOrderForm';
 import { PendingOrderForm } from './PendingOrderForm';
 import { ToggleGroup } from './ToggleGroup';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMarketStatus, useQuote } from '@/lib/store/useMarketStore';
 
 type OrderType = 'market' | PendingOrderType;
 
 type OrderTicketProps = {
     asset: Asset;
-    // Live price, undefined until the first tick arrives
-    price?: number;
+    // Bank balance, undefined while loading
     cash?: number;
     held: number;
 };
 
 // Remount it with key={symbol} to start fresh on another asset
-export function OrderTicket({ asset, price, cash, held }: OrderTicketProps) {
+export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
     const [type, setType] = useState<OrderType>('market');
+    const price = useQuote(asset.symbol)?.price;
+    const live = useMarketStatus() === 'open';
     // Stop loss and take profit sell what is held: nothing held, nothing to protect
     const canProtect = held > 0;
 
@@ -48,18 +50,28 @@ export function OrderTicket({ asset, price, cash, held }: OrderTicketProps) {
                         },
                     ]}
                 />
-                {type === 'market' ? (
-                    <MarketOrderForm asset={asset} price={price} cash={cash} held={held} />
-                ) : (
-                    // key: switching type starts a fresh form
-                    <PendingOrderForm
-                        key={type}
-                        asset={asset}
-                        type={type}
-                        price={price}
-                        held={held}
-                    />
+                {!live && (
+                    <p role="status" className="text-sm text-muted-foreground">
+                        Prices are paused. Trading resumes when the live feed reconnects.
+                    </p>
                 )}
+                {/* A disabled fieldset disables every input and button inside: no order goes
+                    out on a price the user can no longer trust */}
+                <fieldset disabled={!live} className="min-w-0">
+                    {type === 'market' && (
+                        <MarketOrderForm asset={asset} price={price} cash={cash} held={held} />
+                    )}
+                    {type !== 'market' && (
+                        // key: switching type starts a fresh form
+                        <PendingOrderForm
+                            key={type}
+                            asset={asset}
+                            type={type}
+                            price={price}
+                            held={held}
+                        />
+                    )}
+                </fieldset>
             </CardContent>
         </Card>
     );

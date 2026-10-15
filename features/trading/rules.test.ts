@@ -12,6 +12,7 @@ import {
     pendingOrderRejection,
     portfolioSummary,
     positionPnl,
+    replayTicks,
     topMovers,
 } from './rules';
 import type { Market, Position } from './types';
@@ -308,6 +309,23 @@ describe('applyTick', () => {
         }
 
         expect(market.AAPL.history.map(({ price }) => price)).toEqual([3, 4, 5]);
+    });
+});
+
+describe('replayTicks', () => {
+    it('lets a newcomer rebuild the same chart and day change as the server', () => {
+        let server: Market = {};
+        for (const price of [100, 102, 101]) {
+            server = applyTick(server, buildPriceTick({ symbol: 'AAPL', open: 99, price }));
+        }
+
+        const client = replayTicks(server).reduce<Market>(
+            (market, tick) => applyTick(market, tick),
+            {},
+        );
+
+        expect(client.AAPL.history).toEqual(server.AAPL.history);
+        expect(client.AAPL).toMatchObject({ price: 101, previousPrice: 102, open: 99 });
     });
 });
 

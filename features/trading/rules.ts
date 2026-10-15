@@ -302,6 +302,25 @@ export function applyTick(market: Market, tick: PriceTick, historyLength = HISTO
     };
 }
 
+// What a newcomer receives on connection: the kept history of every asset as ticks, oldest
+// first, so applyTick rebuilds the same chart instead of starting from a single point
+export function replayTicks(market: Market): PriceTick[] {
+    return Object.values(market).flatMap(({ symbol, open, history }) =>
+        history.map(({ time, price }) => ({ type: 'price' as const, symbol, price, open, time })),
+    );
+}
+
+// The latest tick of every asset, as served by the simulator's GET /prices
+export function latestTicks(market: Market): PriceTick[] {
+    return Object.values(market).map(({ symbol, price, open, time }) => ({
+        type: 'price',
+        symbol,
+        price,
+        open,
+        time,
+    }));
+}
+
 // The assets that moved the most since the open, up or down: a -3% drop beats a +1% gain
 export function topMovers(market: Market, count: number): Quote[] {
     return Object.values(market)

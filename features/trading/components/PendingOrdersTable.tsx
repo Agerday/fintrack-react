@@ -3,12 +3,13 @@
 import { BellRing, X } from 'lucide-react';
 import { useCancelPendingOrder } from '../hooks';
 import { changeRatio, pendingOrderLabels } from '../rules';
-import type { Market, PendingOrder } from '../types';
+import type { PendingOrder } from '../types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency, formatSignedPercent } from '@/lib/formatters';
+import { useMarketPrices } from '@/lib/store/useMarketStore';
 
 type PendingOrderRow = PendingOrder & {
     // How far the price still has to move to fire it, undefined before the first tick
@@ -63,10 +64,11 @@ function CancelButton({ pending }: CancelButtonProps) {
 
 type PendingOrdersTableProps = {
     pendingOrders: PendingOrder[];
-    market: Market;
 };
 
-export function PendingOrdersTable({ pendingOrders, market }: PendingOrdersTableProps) {
+export function PendingOrdersTable({ pendingOrders }: PendingOrdersTableProps) {
+    const market = useMarketPrices();
+
     if (!pendingOrders.length) {
         return (
             <EmptyState

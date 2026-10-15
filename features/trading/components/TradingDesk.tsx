@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { assets } from '../data';
-import { useMarket, useOrders, usePendingOrders, usePositions } from '../hooks';
+import { useMarketFeed, useOrders, usePendingOrders, usePositions } from '../hooks';
 import { heldQuantity, portfolioSummary } from '../rules';
+import type { Position } from '../types';
 import { ConnectionBadge } from './ConnectionBadge';
 import { OrderHistory } from './OrderHistory';
 import { OrderTicket } from './OrderTicket';
@@ -17,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { QueryState } from '@/components/shared/QueryState';
 import { useAccount } from '@/features/account/hooks';
 import { formatCurrency } from '@/lib/formatters';
+import { useMarketPrices, useMarketStatus } from '@/lib/store/useMarketStore';
 
 type SummaryTileProps = {
     label: string;
@@ -48,9 +50,39 @@ function Section({ title, children }: SectionProps) {
     );
 }
 
+type PortfolioSummaryProps = {
+    positions: Position[];
+    cash?: number;
+};
+
+// Values the whole portfolio at the live prices: re-renders on every tick, the desk around it
+// does not
+function PortfolioSummary({ positions, cash }: PortfolioSummaryProps) {
+    const summary = portfolioSummary(positions, useMarketPrices());
+
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
+            <SummaryTile label="Available cash">
+                {cash === undefined ? '—' : formatCurrency(cash)}
+            </SummaryTile>
+            <SummaryTile label="Portfolio value">{formatCurrency(summary.value)}</SummaryTile>
+            <SummaryTile label="Unrealized P&L">
+                <PnlAmount amount={summary.unrealized} />
+            </SummaryTile>
+            <SummaryTile label="Realized P&L">
+                <PnlAmount amount={summary.realized} />
+            </SummaryTile>
+            <SummaryTile label="Total P&L">
+                <PnlAmount amount={summary.total} ratio={summary.totalRatio} />
+            </SummaryTile>
+        </div>
+    );
+}
+
 export function TradingDesk() {
     const [symbol, setSymbol] = useState(assets[0].symbol);
-    const { market, status } = useMarket();
+    useMarketFeed();
+    const status = useMarketStatus();
     const positions = usePositions();
     const orders = useOrders();
     const pendingOrders = usePendingOrders();
@@ -58,8 +90,7 @@ export function TradingDesk() {
 
     // assets is a static, non-empty list and symbol only ever comes from it
     const asset = assets.find((item) => item.symbol === symbol) ?? assets[0];
-    const quote = market[symbol];
-    const summary = portfolioSummary(positions.data ?? [], market);
+    const cash = account?.balance;
 
     return (
         <div className="space-y-6">
@@ -67,27 +98,12 @@ export function TradingDesk() {
                 <ConnectionBadge status={status} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
-                <SummaryTile label="Available cash">
-                    {account ? formatCurrency(account.balance) : '—'}
-                </SummaryTile>
-                <SummaryTile label="Portfolio value">{formatCurrency(summary.value)}</SummaryTile>
-                <SummaryTile label="Unrealized P&L">
-                    <PnlAmount amount={summary.unrealized} />
-                </SummaryTile>
-                <SummaryTile label="Realized P&L">
-                    <PnlAmount amount={summary.realized} />
-                </SummaryTile>
-                <SummaryTile label="Total P&L">
-                    <PnlAmount amount={summary.total} ratio={summary.totalRatio} />
-                </SummaryTile>
-            </div>
+            <PortfolioSummary positions={positions.data ?? []} cash={cash} />
 
             <div className="grid gap-6 lg:grid-cols-[18rem_1fr] xl:grid-cols-[18rem_1fr_22rem]">
-                <Watchlist market={market} selected={symbol} onSelect={setSymbol} />
+                <Watchlist selected={symbol} onSelect={setSymbol} />
                 <PriceChart
                     asset={asset}
-                    quote={quote}
                     pendingOrders={(pendingOrders.data ?? []).filter(
                         (pending) => pending.symbol === symbol,
                     )}
@@ -97,8 +113,7 @@ export function TradingDesk() {
                     <OrderTicket
                         key={symbol}
                         asset={asset}
-                        price={quote?.price}
-                        cash={account?.balance}
+                        cash={cash}
                         held={heldQuantity(positions.data ?? [], symbol)}
                     />
                 </div>
@@ -110,7 +125,7 @@ export function TradingDesk() {
                     error={positions.error}
                     onRetry={() => void positions.refetch()}
                 >
-                    <PositionsTable positions={positions.data ?? []} market={market} />
+                    <PositionsTable positions={positions.data ?? []} />
                 </QueryState>
             </Section>
 
@@ -120,7 +135,7 @@ export function TradingDesk() {
                     error={pendingOrders.error}
                     onRetry={() => void pendingOrders.refetch()}
                 >
-                    <PendingOrdersTable pendingOrders={pendingOrders.data ?? []} market={market} />
+                    <PendingOrdersTable pendingOrders={pendingOrders.data ?? []} />
                 </QueryState>
             </Section>
 

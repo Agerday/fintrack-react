@@ -3,21 +3,23 @@
 import Link from 'next/link';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { assets } from '../data';
-import { useMarket } from '../hooks';
+import { useMarketFeed } from '../hooks';
 import { topMovers } from '../rules';
 import { ConnectionBadge } from './ConnectionBadge';
 import { PriceChange } from './PriceChange';
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/formatters';
+import { useMarketPrices, useMarketStatus } from '@/lib/store/useMarketStore';
 import { cn } from '@/lib/utils';
 
 const MOVERS_COUNT = 3;
 
 // Same live feed as the trading page: the dashboard opens its own market socket
 export function TopMovers() {
-    const { market, status } = useMarket();
-    const movers = topMovers(market, MOVERS_COUNT);
+    useMarketFeed();
+    const status = useMarketStatus();
+    const movers = topMovers(useMarketPrices(), MOVERS_COUNT);
 
     return (
         <Card>

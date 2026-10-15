@@ -1,10 +1,13 @@
+'use client';
+
 import { Briefcase } from 'lucide-react';
 import { positionPnl } from '../rules';
-import type { Market, Position } from '../types';
+import type { Position } from '../types';
 import { PnlAmount } from './PnlAmount';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency } from '@/lib/formatters';
+import { useMarketPrices } from '@/lib/store/useMarketStore';
 
 type PositionRow = ReturnType<typeof positionPnl> & {
     symbol: string;
@@ -63,10 +66,11 @@ const columns: Column<PositionRow>[] = [
 
 type PositionsTableProps = {
     positions: Position[];
-    market: Market;
 };
 
-export function PositionsTable({ positions, market }: PositionsTableProps) {
+export function PositionsTable({ positions }: PositionsTableProps) {
+    const market = useMarketPrices();
+
     if (!positions.length) {
         return (
             <EmptyState

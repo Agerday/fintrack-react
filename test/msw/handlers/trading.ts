@@ -111,7 +111,7 @@ export const tradingHandlers = [
         return HttpResponse.json({ success: true });
     }),
 
-    // Like the real server: a newcomer gets every current price right away
+    // Like the real server, which replays its recent history: here one point per asset
     marketFeed.addEventListener('connection', ({ client }) => {
         for (const tick of tradingDb.prices) client.send(JSON.stringify(tick));
     }),

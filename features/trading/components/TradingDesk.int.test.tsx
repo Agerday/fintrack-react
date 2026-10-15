@@ -12,6 +12,7 @@ import {
 } from '@/test/factories';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { renderWithClient } from '@/test/render';
+import { server } from '@/test/msw/server';
 
 function sideButton(name: string) {
     return within(screen.getByRole('group', { name: 'Side' })).getByRole('button', { name });
@@ -222,6 +223,23 @@ describe('TradingDesk', () => {
         );
 
         expect(await screen.findByText('No pending orders')).toBeInTheDocument();
+    });
+
+    it('blocks trading while the live feed is down', async () => {
+        tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: 100 })];
+        let closeFeed = () => {};
+        server.use(
+            marketFeed.addEventListener('connection', ({ client }) => {
+                closeFeed = () => client.close();
+            }),
+        );
+        renderWithClient(<TradingDesk />);
+        await screen.findByText('Live');
+
+        closeFeed();
+
+        expect(await screen.findByText(/Prices are paused/)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Buy AAPL' })).toBeDisabled();
     });
 
     it('alerts the user and refreshes the portfolio when a stop loss fires', async () => {

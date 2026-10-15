@@ -11,13 +11,14 @@ import {
     Tooltip,
 } from 'chart.js';
 import { pendingOrderLabels } from '../rules';
-import type { Asset, PendingOrder, Quote } from '../types';
+import type { Asset, PendingOrder, PendingOrderType } from '../types';
 import { PriceChange } from './PriceChange';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useChart } from '@/hooks/useChart';
 import { cssVar } from '@/lib/css-var';
 import { formatCurrency, formatTime } from '@/lib/formatters';
+import { useMarketStatus, useQuote } from '@/lib/store/useMarketStore';
 
 // Tree-shaking: register only what a line chart needs instead of the whole library
 Chart.register(
@@ -30,17 +31,22 @@ Chart.register(
     Tooltip,
 );
 
+const levelColors: Record<PendingOrderType, string> = {
+    stop_loss: '--destructive',
+    take_profit: '--success',
+};
+
 type PriceChartProps = {
     asset: Asset;
-    quote?: Quote;
-    // Stop losses and take profits of this asset, drawn as dashed levels
+    // Pending orders of this asset, drawn as dashed levels
     pendingOrders: PendingOrder[];
 };
 
-export function PriceChart({ asset, quote, pendingOrders }: PriceChartProps) {
-    // The chart is rebuilt when this key changes: on each tick of THIS asset, or when one of
-    // its levels is added or removed. A string, so a new array with the same levels is no change.
-    // Animations are off, a rebuild is instant
+export function PriceChart({ asset, pendingOrders }: PriceChartProps) {
+    const quote = useQuote(asset.symbol);
+    const live = useMarketStatus() === 'open';
+    // The chart redraws when this key changes: on each tick of THIS asset, or when one of its
+    // levels is added or removed. A string, so a new array with the same levels is no change
     const redrawKey = [quote?.time, ...pendingOrders.map(({ id }) => id)].join('|');
     const canvasRef = useChart(() => {
         const history = quote?.history ?? [];
@@ -68,9 +74,7 @@ export function PriceChart({ asset, quote, pendingOrders }: PriceChartProps) {
                     ...pendingOrders.map((pending) => ({
                         label: pendingOrderLabels[pending.type],
                         data: history.map(() => pending.triggerPrice),
-                        borderColor: cssVar(
-                            pending.type === 'stop_loss' ? '--destructive' : '--success',
-                        ),
+                        borderColor: cssVar(levelColors[pending.type]),
                         borderWidth: 1,
                         borderDash: [6, 4],
                         pointRadius: 0,
@@ -106,6 +110,7 @@ export function PriceChart({ asset, quote, pendingOrders }: PriceChartProps) {
             <CardHeader>
                 <CardDescription>
                     {asset.name} · {asset.symbol}
+                    {!live && quote && ' · Prices paused'}
                 </CardDescription>
                 <CardTitle className="flex items-baseline gap-3 text-3xl tabular-nums">
                     {quote ? formatCurrency(quote.price) : <Skeleton className="h-9 w-32" />}

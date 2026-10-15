@@ -12,24 +12,30 @@
 import { createServer } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 import { assets } from '@/features/trading/data';
-import { nextPrice, nextTickDelay } from '@/features/trading/rules';
-import type { PriceTick } from '@/features/trading/types';
+import {
+    applyTick,
+    latestTicks,
+    nextPrice,
+    nextTickDelay,
+    replayTicks,
+} from '@/features/trading/rules';
+import type { Market, PriceTick } from '@/features/trading/types';
 import { TRADING_TICKS_URL, WS_PORT } from '@/lib/realtime';
 
 const TICK_REPORT_TIMEOUT_MS = 2000;
 
-// The market opens when the server starts: every restart is a fresh trading day
-const prices = new Map<string, PriceTick>(
-    assets.map(({ symbol, initialPrice }) => [
-        symbol,
-        {
+// The market opens when the server starts: every restart is a fresh trading day.
+// Same reducer as the browser, so the server keeps the recent history a newcomer needs
+let market = assets.reduce<Market>(
+    (current, { symbol, initialPrice }) =>
+        applyTick(current, {
             type: 'price',
             symbol,
             price: initialPrice,
             open: initialPrice,
             time: new Date().toISOString(),
-        },
-    ]),
+        }),
+    {},
 );
 
 // One plain HTTP server serves both sides on the same port:
@@ -39,7 +45,7 @@ const prices = new Map<string, PriceTick>(
 const server = createServer((request, response) => {
     if (request.method === 'GET' && request.url === '/prices') {
         response.writeHead(200, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify([...prices.values()]));
+        response.end(JSON.stringify(latestTicks(market)));
         return;
     }
 
@@ -97,8 +103,8 @@ eventsWss.on('connection', (socket) => {
 
 marketWss.on('connection', (socket) => {
     console.log(`market: client connected (${marketWss.clients.size} total)`);
-    // A newcomer gets every current price right away instead of waiting for the next ticks
-    for (const tick of prices.values()) socket.send(JSON.stringify(tick));
+    // A newcomer gets the recent history right away: a full chart, not a single point
+    for (const tick of replayTicks(market)) socket.send(JSON.stringify(tick));
     socket.on('close', () =>
         console.log(`market: client disconnected (${marketWss.clients.size} total)`),
     );
@@ -130,14 +136,16 @@ async function reportTick(tick: PriceTick) {
 // random delay (a setInterval would tick at a fixed pace)
 function scheduleTick(symbol: string, volatility: number) {
     setTimeout(() => {
-        const current = prices.get(symbol);
+        const current = market[symbol];
         if (current) {
             const tick: PriceTick = {
-                ...current,
+                type: 'price',
+                symbol,
                 price: nextPrice(current.price, volatility),
+                open: current.open,
                 time: new Date().toISOString(),
             };
-            prices.set(symbol, tick);
+            market = applyTick(market, tick);
             broadcast(marketWss, JSON.stringify(tick));
             void reportTick(tick);
         }

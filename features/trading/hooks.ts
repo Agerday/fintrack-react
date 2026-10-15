@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
     cancelPendingOrder,
@@ -8,11 +8,11 @@ import {
     placeOrder,
     placePendingOrder,
 } from './api';
-import { applyTick, tradeExecutedNotification } from './rules';
+import { tradeExecutedNotification } from './rules';
 import { marketMessageSchema } from './schema';
-import type { Market } from './types';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { MARKET_WS_URL, parseEvent } from '@/lib/realtime';
+import { useMarketStore } from '@/lib/store/useMarketStore';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 
 // A fill changes the positions, the history, the pending orders (a stop loss is consumed,
@@ -72,32 +72,41 @@ export function useCancelPendingOrder() {
     });
 }
 
-// Live prices pushed by the market simulator, plus the trades the server filled on its own
-// (stop loss / take profit). Prices are plain component state, not TanStack Query: nothing to
-// fetch, the socket is the only source. Not Zustand either: only the pages showing them need
-// it, and the connection lives as long as they are mounted
-export function useMarket() {
+// Opens the market socket while the page is mounted and feeds the live prices into
+// useMarketStore, plus handles the trades the server filled on its own (stop loss / take
+// profit). Not TanStack Query: nothing to fetch, the socket is the only source. Mount it
+// once per page; components read the prices with useQuote / useMarketPrices
+export function useMarketFeed() {
     const queryClient = useQueryClient();
-    const [market, setMarket] = useState<Market>({});
 
     const status = useWebSocket(MARKET_WS_URL, {
-        // A stop loss may have fired while we were offline
-        onReconnect: () => refreshPortfolio(queryClient),
+        onReconnect: () => {
+            // The server replays its recent history on every connection: start from scratch
+            // instead of appending it twice
+            useMarketStore.setState({ market: {} });
+            // A stop loss may have fired while we were offline
+            refreshPortfolio(queryClient);
+        },
         onMessage: (data) => {
             const message = parseEvent(data, marketMessageSchema);
             if (!message) {
                 console.warn('Ignored invalid market message:', data);
                 return;
             }
+            // getState(), not a hook: read when the message arrives, outside render
             if (message.type === 'price') {
-                setMarket((current) => applyTick(current, message));
+                useMarketStore.getState().applyTick(message);
                 return;
             }
             refreshPortfolio(queryClient);
-            // getState(), not a hook: read when the message arrives, outside render
             useNotificationStore.getState().add(tradeExecutedNotification(message));
         },
     });
 
-    return { market, status };
+    useEffect(() => {
+        useMarketStore.getState().setStatus(status);
+    }, [status]);
+
+    // Leaving the page closes the socket: the next visit gets a fresh replay
+    useEffect(() => () => useMarketStore.getState().reset(), []);
 }
