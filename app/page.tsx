@@ -14,6 +14,7 @@ import { recentInvoices } from '@/features/invoices/rules';
 import { AmountByClientChart } from '@/features/dashboard/components/AmountByClientChart';
 import { CollectionRateChart } from '@/features/dashboard/components/CollectionRateChart';
 import { sumAmountByClient, sumAmountByStatus } from '@/features/dashboard/rules';
+import { TopMovers } from '@/features/trading/components/TopMovers';
 
 // Only the cash balance is live for now: the other figures are still placeholders
 function buildStats(balance: number): StatCardProps[] {
@@ -40,6 +41,7 @@ function DashboardSkeleton() {
                     <Skeleton key={card} className="h-32 rounded-xl" />
                 ))}
             </div>
+            <Skeleton className="h-40 rounded-xl" />
             <div className="grid gap-6 lg:grid-cols-2">
                 <Skeleton className="h-80 rounded-xl" />
                 <Skeleton className="h-80 rounded-xl" />
@@ -72,6 +74,7 @@ export default function DashboardPage() {
             >
                 <div className="space-y-6">
                     <StatsGrid stats={buildStats(account.data?.balance ?? 0)} />
+                    <TopMovers />
                     <div className="grid gap-6 lg:grid-cols-2">
                         <AmountByClientChart data={amountByClient} />
                         <CollectionRateChart data={amountByStatus} />
