@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { assets } from '../data';
+import { changeRatio } from '../rules';
 import type { Market } from '../types';
 import { PriceChange } from './PriceChange';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,8 +23,12 @@ export function Watchlist({ market, selected, onSelect }: WatchlistProps) {
             <ul className="divide-y" aria-label="Markets">
                 {assets.map(({ symbol, name }) => {
                     const quote = market[symbol];
-                    const up = quote && quote.price > quote.previousPrice;
-                    const down = quote && quote.price < quote.previousPrice;
+                    // The color follows the change since the open, like the % below: one up
+                    // tick on a falling asset must not paint it green. The arrow alone shows
+                    // the direction of the last tick.
+                    const ratio = quote ? changeRatio(quote.price, quote.open) : 0;
+                    const tickUp = quote && quote.price > quote.previousPrice;
+                    const tickDown = quote && quote.price < quote.previousPrice;
 
                     return (
                         <li key={symbol}>
@@ -50,12 +55,22 @@ export function Watchlist({ market, selected, onSelect }: WatchlistProps) {
                                             key={quote.time}
                                             className={cn(
                                                 'flex items-center justify-end gap-1 text-sm font-medium tabular-nums animate-in fade-in duration-500',
-                                                up && 'text-success',
-                                                down && 'text-destructive',
+                                                ratio > 0 && 'text-success',
+                                                ratio < 0 && 'text-destructive',
                                             )}
                                         >
-                                            {up && <ArrowUp className="size-3" aria-hidden />}
-                                            {down && <ArrowDown className="size-3" aria-hidden />}
+                                            {tickUp && (
+                                                <ArrowUp
+                                                    className="size-3 text-muted-foreground"
+                                                    aria-hidden
+                                                />
+                                            )}
+                                            {tickDown && (
+                                                <ArrowDown
+                                                    className="size-3 text-muted-foreground"
+                                                    aria-hidden
+                                                />
+                                            )}
                                             {formatCurrency(quote.price)}
                                         </span>
                                         <PriceChange
