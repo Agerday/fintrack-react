@@ -27,6 +27,21 @@ type FormErrorProps = {
     message?: string;
 };
 
+type FormSuccessProps = {
+    message?: string;
+};
+
+// Confirmation for a form that stays on screen after submitting (no dialog to close)
+export function FormSuccess({ message }: FormSuccessProps) {
+    if (!message) return null;
+
+    return (
+        <p role="status" className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+            {message}
+        </p>
+    );
+}
+
 // Global (non-field) API error, shown above the submit button
 export function FormError({ message }: FormErrorProps) {
     if (!message) return null;
