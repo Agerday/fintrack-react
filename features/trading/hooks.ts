@@ -5,6 +5,7 @@ import {
     getOrders,
     getPendingOrders,
     getPositions,
+    placeOcoOrder,
     placeOrder,
     placePendingOrder,
 } from './api';
@@ -56,6 +57,18 @@ export function usePlacePendingOrder() {
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['pending-orders'] }),
         onError: (error) => {
             console.error('Failed to place pending order:', error);
+        },
+    });
+}
+
+export function usePlaceOcoOrder() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: placeOcoOrder,
+        onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['pending-orders'] }),
+        onError: (error) => {
+            console.error('Failed to place OCO order:', error);
         },
     });
 }

@@ -56,6 +56,8 @@ export type PendingOrder = {
     type: PendingOrderType;
     quantity: number;
     triggerPrice: number;
+    // Shared by the two legs of an OCO order: when one fires or is cancelled, so is the other
+    ocoId?: string;
 };
 
 export type PricePoint = {

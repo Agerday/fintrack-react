@@ -8,6 +8,7 @@ import {
     MIN_TICK_DELAY_MS,
     nextPrice,
     nextTickDelay,
+    ocoRejection,
     orderRejection,
     orderTotal,
     pendingOrderRejection,
@@ -15,6 +16,7 @@ import {
     positionPnl,
     replayTicks,
     topMovers,
+    withoutPendingOrder,
 } from './rules';
 import type { Market, Position } from './types';
 import { buildPendingOrder, buildPosition, buildPriceTick } from '@/test/factories';
@@ -284,6 +286,23 @@ describe('fillPendingOrders', () => {
 
         expect(result.pendingOrders).toEqual([limit]);
     });
+
+    it('cancels the twin of an OCO leg it fills, even with units left to protect', () => {
+        const stop = buildPendingOrder({ type: 'stop_loss', quantity: 2, triggerPrice: 95 });
+        const target = buildPendingOrder({ type: 'take_profit', quantity: 2, triggerPrice: 120 });
+        const state = {
+            positions: [buildPosition({ quantity: 5 })],
+            pendingOrders: [
+                { ...stop, ocoId: 'OCO-1' },
+                { ...target, ocoId: 'OCO-1' },
+            ],
+        };
+
+        const result = fillPendingOrders(state, { symbol: 'AAPL', price: 90 }, now, 0);
+
+        expect(result.positions[0].quantity).toBe(3);
+        expect(result.pendingOrders).toEqual([]);
+    });
 });
 
 describe('availableCash', () => {
@@ -313,6 +332,27 @@ describe('pendingOrderRejection of a buy limit', () => {
             message: 'Insufficient funds: this order reserves $180.00, you have $179.99 available',
         });
         expect(pendingOrderRejection({ ...buyLimit, triggerPrice: 90 }, 100, 0, 180)).toBeNull();
+    });
+});
+
+describe('ocoRejection', () => {
+    it('blames the leg whose price is on the wrong side of the market', () => {
+        const request = { symbol: 'AAPL', quantity: 1, stopPrice: 90, targetPrice: 99 };
+
+        expect(ocoRejection(request, 100, 1)).toEqual({
+            field: 'targetPrice',
+            message: 'A take profit must be above the current price ($100.00)',
+        });
+    });
+});
+
+describe('withoutPendingOrder', () => {
+    it('cancels the twin of an OCO leg, and only it', () => {
+        const stop = buildPendingOrder({ ocoId: 'OCO-1' });
+        const target = buildPendingOrder({ type: 'take_profit', ocoId: 'OCO-1' });
+        const other = buildPendingOrder();
+
+        expect(withoutPendingOrder([stop, target, other], stop.id)).toEqual([other]);
     });
 });
 

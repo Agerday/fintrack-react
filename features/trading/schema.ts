@@ -39,6 +39,15 @@ export const pendingOrderSchema = z.object({
     triggerPrice: priceSchema('Trigger price'),
 });
 
+// One Cancels the Other: a stop loss and a take profit on the same units. The first one to
+// fire cancels its twin, so the position is never sold twice
+export const ocoOrderSchema = z.object({
+    symbol: symbolSchema,
+    quantity: quantitySchema,
+    stopPrice: priceSchema('Stop loss price'),
+    targetPrice: priceSchema('Take profit price'),
+});
+
 // Pushed by the market simulator (server/ws.ts) on ws://.../market, and returned in bulk
 // by its GET /prices. open = the price when the market opened, to show the day change
 export const priceTickSchema = z.object({
@@ -69,3 +78,4 @@ export const marketMessageSchema = z.discriminatedUnion('type', [
 
 export type OrderFormValues = z.infer<typeof orderSchema>;
 export type PendingOrderFormValues = z.infer<typeof pendingOrderSchema>;
+export type OcoOrderFormValues = z.infer<typeof ocoOrderSchema>;

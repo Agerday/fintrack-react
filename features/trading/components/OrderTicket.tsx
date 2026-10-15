@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { pendingOrderLabels } from '../rules';
 import type { Asset, PendingOrderType } from '../types';
 import { MarketOrderForm } from './MarketOrderForm';
+import { OcoOrderForm } from './OcoOrderForm';
 import { PendingOrderForm } from './PendingOrderForm';
 import { ToggleGroup } from './ToggleGroup';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMarketStatus, useQuote } from '@/lib/store/useMarketStore';
 
-type OrderType = 'market' | PendingOrderType;
+type OrderType = 'market' | PendingOrderType | 'oco';
 
 type OrderTicketProps = {
     asset: Asset;
@@ -23,7 +24,7 @@ export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
     const [type, setType] = useState<OrderType>('market');
     const price = useQuote(asset.symbol)?.price;
     const live = useMarketStatus() === 'open';
-    // Stop loss and take profit sell what is held: nothing held, nothing to protect
+    // Stop loss, take profit and OCO sell what is held: nothing held, nothing to protect
     const canProtect = held > 0;
 
     return (
@@ -49,6 +50,7 @@ export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
                             label: pendingOrderLabels.take_profit,
                             disabled: !canProtect,
                         },
+                        { value: 'oco', label: 'OCO', disabled: !canProtect },
                     ]}
                 />
                 {!live && (
@@ -62,7 +64,8 @@ export function OrderTicket({ asset, cash, held }: OrderTicketProps) {
                     {type === 'market' && (
                         <MarketOrderForm asset={asset} price={price} cash={cash} held={held} />
                     )}
-                    {type !== 'market' && (
+                    {type === 'oco' && <OcoOrderForm asset={asset} price={price} held={held} />}
+                    {type !== 'market' && type !== 'oco' && (
                         // key: switching type starts a fresh form
                         <PendingOrderForm
                             key={type}

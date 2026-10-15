@@ -3,13 +3,16 @@ import type { z } from 'zod';
 import { balanceOf, tradeTransaction } from '@/features/account/rules';
 import {
     availableCash,
+    createOcoOrders,
     createPendingOrder,
     executeOrder,
     heldQuantity,
+    ocoRejection,
     orderRejection,
     pendingOrderRejection,
+    withoutPendingOrder,
 } from '@/features/trading/rules';
-import { orderSchema, pendingOrderSchema } from '@/features/trading/schema';
+import { ocoOrderSchema, orderSchema, pendingOrderSchema } from '@/features/trading/schema';
 import type { Order, PendingOrder, Position, PriceTick } from '@/features/trading/types';
 import { MARKET_PRICES_URL, MARKET_WS_URL } from '@/lib/realtime';
 import { accountDb } from './account';
@@ -103,13 +106,29 @@ export const tradingHandlers = [
         return HttpResponse.json(pending, { status: 201 });
     }),
 
+    http.post('/api/trading/pending-orders/oco', async ({ request }) => {
+        const result = ocoOrderSchema.safeParse(await request.json());
+        if (!result.success) return validationError(result.error);
+
+        const price = priceOf(result.data.symbol);
+        if (price === undefined) return badRequest('Unknown asset', 'symbol');
+        const rejection = ocoRejection(
+            result.data,
+            price,
+            heldQuantity(tradingDb.positions, result.data.symbol),
+        );
+        if (rejection) return badRequest(rejection.message, rejection.field);
+
+        const legs = createOcoOrders(result.data, new Date());
+        tradingDb.pendingOrders = [...tradingDb.pendingOrders, ...legs];
+        return HttpResponse.json(legs, { status: 201 });
+    }),
+
     http.delete('/api/trading/pending-orders/:id', ({ params }) => {
         if (!tradingDb.pendingOrders.some((pending) => pending.id === params.id)) {
             return HttpResponse.json({ message: 'Pending order not found' }, { status: 404 });
         }
-        tradingDb.pendingOrders = tradingDb.pendingOrders.filter(
-            (pending) => pending.id !== params.id,
-        );
+        tradingDb.pendingOrders = withoutPendingOrder(tradingDb.pendingOrders, String(params.id));
         return HttpResponse.json({ success: true });
     }),
 

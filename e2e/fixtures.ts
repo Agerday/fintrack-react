@@ -90,32 +90,26 @@ export class TradingApi {
         expect(response.status()).toBe(201);
     }
 
-    // A stop loss 1 cent under the live price and a take profit 1 cent above: the first tick
-    // that moves at least 2 cents fires one of them, whichever way the random walk goes.
-    // The price can move between reading it and placing the orders (the API then answers
-    // 400), so the whole step is retried
-    async placeBracket(symbol: string, quantity: number) {
+    // An OCO with its stop loss 1 cent under the live price and its take profit 1 cent above:
+    // the first tick that moves at least 2 cents fires one of them, whichever way the random
+    // walk goes, and cancels the other. The price can move between reading it and placing the
+    // order (the API then answers 400), so the whole step is retried
+    async placeTightOco(symbol: string, quantity: number) {
         this.symbols.add(symbol);
         await expect(async () => {
-            await this.cancelPendingOrders(symbol);
             const prices = (await (
                 await this.request.get(MARKET_PRICES_URL)
             ).json()) as PriceTick[];
             const price = prices.find((tick) => tick.symbol === symbol)?.price ?? 0;
-            for (const [type, triggerPrice] of [
-                ['stop_loss', price - 0.01],
-                ['take_profit', price + 0.01],
-            ] as const) {
-                const response = await this.request.post('/api/trading/pending-orders', {
-                    data: {
-                        symbol,
-                        type,
-                        quantity,
-                        triggerPrice: Math.round(triggerPrice * 100) / 100,
-                    },
-                });
-                expect(response.status()).toBe(201);
-            }
+            const response = await this.request.post('/api/trading/pending-orders/oco', {
+                data: {
+                    symbol,
+                    quantity,
+                    stopPrice: Math.round((price - 0.01) * 100) / 100,
+                    targetPrice: Math.round((price + 0.01) * 100) / 100,
+                },
+            });
+            expect(response.status()).toBe(201);
         }).toPass();
     }
 

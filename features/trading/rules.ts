@@ -191,12 +191,73 @@ export function pendingOrderRejection(
     return null;
 }
 
-export function createPendingOrder(request: PendingOrderRequest, now: Date): PendingOrder {
+export function createPendingOrder(
+    request: PendingOrderRequest,
+    now: Date,
+    ocoId?: string,
+): PendingOrder {
     return {
         ...request,
         id: `PND-${crypto.randomUUID()}`,
         createdAt: now.toISOString(),
+        ...(ocoId && { ocoId }),
     };
+}
+
+type OcoRequest = { symbol: string; quantity: number; stopPrice: number; targetPrice: number };
+
+// Each leg is checked like a lone stop loss / take profit, the blame moved to its own field
+export function ocoRejection(
+    { symbol, quantity, stopPrice, targetPrice }: OcoRequest,
+    price: number,
+    held: number,
+): { field: 'quantity' | 'stopPrice' | 'targetPrice'; message: string } | null {
+    const legs = [
+        { type: 'stop_loss', triggerPrice: stopPrice, priceField: 'stopPrice' },
+        { type: 'take_profit', triggerPrice: targetPrice, priceField: 'targetPrice' },
+    ] as const;
+    for (const { type, triggerPrice, priceField } of legs) {
+        // Sell legs: the available cash plays no part
+        const rejection = pendingOrderRejection(
+            { symbol, type, quantity, triggerPrice },
+            price,
+            held,
+            0,
+        );
+        if (rejection) {
+            const field = rejection.field === 'triggerPrice' ? priceField : rejection.field;
+            return { field, message: rejection.message };
+        }
+    }
+    return null;
+}
+
+// The two linked legs, sharing one ocoId
+export function createOcoOrders(
+    { symbol, quantity, stopPrice, targetPrice }: OcoRequest,
+    now: Date,
+): [PendingOrder, PendingOrder] {
+    const ocoId = `OCO-${crypto.randomUUID()}`;
+    return [
+        createPendingOrder(
+            { symbol, quantity, type: 'stop_loss', triggerPrice: stopPrice },
+            now,
+            ocoId,
+        ),
+        createPendingOrder(
+            { symbol, quantity, type: 'take_profit', triggerPrice: targetPrice },
+            now,
+            ocoId,
+        ),
+    ];
+}
+
+// Cancelling one leg of an OCO cancels its twin: alone, it would no longer be what the user set
+export function withoutPendingOrder(pendingOrders: PendingOrder[], id: string): PendingOrder[] {
+    const cancelled = pendingOrders.find((pending) => pending.id === id);
+    const isTwin = (pending: PendingOrder) =>
+        cancelled?.ocoId !== undefined && pending.ocoId === cancelled.ocoId;
+    return pendingOrders.filter((pending) => pending.id !== id && !isTwin(pending));
 }
 
 // <= / >=, not ===: prices jump from tick to tick and rarely land on the trigger exactly.
@@ -217,6 +278,7 @@ export type TriggeredOrder = Order & { trigger: PendingOrderType };
 // - A sell never sells more than what is still held (a manual sell may have come first), and
 //   once nothing is left the other sell orders of that asset are dropped
 // - A buy limit the balance can't pay for waits for the next tick instead of overdrawing
+// - A filled OCO leg cancels its twin
 export function fillPendingOrders(
     { positions, pendingOrders }: TradingState,
     tick: Pick<PriceTick, 'symbol' | 'price'>,
@@ -230,9 +292,11 @@ export function fillPendingOrders(
 
     const orders: TriggeredOrder[] = [];
     const done: PendingOrder[] = [];
+    const cancelledOcoIds = new Set<string>();
     let current = positions;
     let balance = cash;
     for (const pending of triggered) {
+        if (pending.ocoId && cancelledOcoIds.has(pending.ocoId)) continue;
         const side = pendingOrderSide(pending.type);
         const quantity =
             side === 'buy'
@@ -241,6 +305,7 @@ export function fillPendingOrders(
         if (side === 'buy' && orderTotal(tick.price, quantity) > balance) continue;
 
         done.push(pending);
+        if (pending.ocoId) cancelledOcoIds.add(pending.ocoId);
         if (quantity === 0) continue;
 
         const result = executeOrder(
@@ -261,6 +326,7 @@ export function fillPendingOrders(
         pendingOrders: pendingOrders.filter(
             (pending) =>
                 !done.includes(pending) &&
+                !(pending.ocoId && cancelledOcoIds.has(pending.ocoId)) &&
                 !(
                     soldOut &&
                     pending.symbol === tick.symbol &&

@@ -5,6 +5,7 @@ import { useCancelPendingOrder } from '../hooks';
 import { changeRatio, pendingOrderLabels } from '../rules';
 import type { PendingOrder } from '../types';
 import { PendingOrderBadge } from './PendingOrderBadge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -21,7 +22,13 @@ const columns: Column<PendingOrderRow>[] = [
     {
         key: 'type',
         header: 'Type',
-        render: (value) => <PendingOrderBadge type={value} />,
+        render: (value, pending) => (
+            <span className="flex items-center gap-2">
+                <PendingOrderBadge type={value} />
+                {/* The other leg is cancelled when this one fires or is cancelled */}
+                {pending.ocoId && <Badge variant="outline">OCO</Badge>}
+            </span>
+        ),
     },
     { key: 'quantity', header: 'Quantity', className: 'text-right tabular-nums' },
     {

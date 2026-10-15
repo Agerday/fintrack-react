@@ -20,15 +20,15 @@ test.describe('Live trading', () => {
         await expect(tradingPage.position('NVDA')).toContainText('Closed');
     });
 
-    test('sells a protected position on its own when the price crosses a trigger', async ({
+    test('sells with one leg of an OCO on its own and cancels the other', async ({
         tradingPage,
         trading,
     }) => {
         // Page first: the alert is pushed on its socket, it must be open when the order fires
         await tradingPage.goto();
-        await trading.buy('MSFT', 1);
+        await trading.buy('MSFT', 2);
 
-        await trading.placeBracket('MSFT', 1);
+        await trading.placeTightOco('MSFT', 1);
 
         await expect(
             tradingPage.page.getByRole('button', { name: /Notifications \(\d+ unread\)/ }),
@@ -37,7 +37,17 @@ test.describe('Live trading', () => {
         await expect(
             tradingPage.page.getByText(/(Stop loss|Take profit) hit on MSFT/),
         ).toBeVisible();
-        await expect(tradingPage.position('MSFT')).toContainText('Closed');
+        // Reload: the list was empty when the page opened, a fresh one proves the twin is gone
+        await tradingPage.goto();
+        const { page } = tradingPage;
+        // Other tests run in parallel and may have pending orders of their own assets
+        await expect(
+            page
+                .getByText('No pending orders')
+                .or(page.getByRole('button', { name: /^Cancel / }).first()),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: /on MSFT$/ })).toHaveCount(0);
+        await expect(tradingPage.position('MSFT')).not.toContainText('Closed');
     });
 
     test('places a buy limit that waits for its price', async ({ tradingPage, trading }) => {

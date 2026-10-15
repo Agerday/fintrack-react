@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { POST } from './route';
 import { DELETE } from './[id]/route';
+import { POST as POST_OCO } from './oco/route';
 import { accountStore } from '@/app/api/account/store';
 import { tradingStore } from '@/app/api/trading/store';
 import {
@@ -115,7 +116,63 @@ describe('POST /api/trading/pending-orders', () => {
     });
 });
 
+describe('POST /api/trading/pending-orders/oco', () => {
+    function postOco(body: unknown) {
+        return POST_OCO(
+            new Request('http://localhost/api/trading/pending-orders/oco', {
+                method: 'POST',
+                body: JSON.stringify(body),
+            }),
+        );
+    }
+
+    it('places a stop loss and a take profit linked to each other', async () => {
+        arrange({ held: 2, price: 100 });
+
+        const response = await postOco({
+            symbol: 'AAPL',
+            quantity: 2,
+            stopPrice: 95,
+            targetPrice: 110,
+        });
+
+        expect(response.status).toBe(201);
+        const [stop, target] = tradingStore.pendingOrders;
+        expect(stop).toMatchObject({ type: 'stop_loss', quantity: 2, triggerPrice: 95 });
+        expect(target).toMatchObject({ type: 'take_profit', quantity: 2, triggerPrice: 110 });
+        expect(stop.ocoId).toBeDefined();
+        expect(target.ocoId).toBe(stop.ocoId);
+    });
+
+    it('blames the price of the leg that would fire at once', async () => {
+        arrange({ held: 2, price: 100 });
+
+        const response = await postOco({
+            symbol: 'AAPL',
+            quantity: 2,
+            stopPrice: 101,
+            targetPrice: 110,
+        });
+
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({ field: 'stopPrice' });
+        expect(tradingStore.pendingOrders).toEqual([]);
+    });
+});
+
 describe('DELETE /api/trading/pending-orders/[id]', () => {
+    it('cancels both legs of an OCO order', async () => {
+        const stop = buildPendingOrder({ ocoId: 'OCO-1' });
+        const target = buildPendingOrder({ type: 'take_profit', ocoId: 'OCO-1' });
+        tradingStore.pendingOrders = [stop, target];
+
+        await DELETE(new Request('http://localhost'), {
+            params: Promise.resolve({ id: target.id }),
+        });
+
+        expect(tradingStore.pendingOrders).toEqual([]);
+    });
+
     it('cancels the pending order', async () => {
         const pending = buildPendingOrder();
         tradingStore.pendingOrders = [pending];

@@ -259,6 +259,29 @@ describe('TradingDesk', () => {
         expect(await within(summaryTile('Available cash')).findByText('$730.00')).toBeVisible();
     });
 
+    it('places a stop loss and a take profit linked as one OCO order', async () => {
+        tradingDb.positions = [buildPosition({ symbol: 'AAPL', quantity: 2 })];
+        tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: 100 })];
+        const { user } = renderWithClient(<TradingDesk />);
+        await waitFor(() => expect(orderTypeButton('OCO')).toBeEnabled());
+
+        await user.click(orderTypeButton('OCO'));
+        await user.type(screen.getByLabelText('Quantity to sell'), '2');
+        await user.type(screen.getByLabelText('Stop loss price'), '95');
+        await user.type(screen.getByLabelText('Take profit price'), '110');
+        await user.click(screen.getByRole('button', { name: 'Place OCO' }));
+
+        expect(
+            await screen.findByText('OCO placed: sell 2 AAPL at $95.00 or $110.00'),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findAllByRole('button', { name: 'Cancel take profit on AAPL' }),
+        ).not.toHaveLength(0);
+        expect(
+            screen.getAllByRole('button', { name: 'Cancel stop loss on AAPL' }),
+        ).not.toHaveLength(0);
+    });
+
     it('alerts the user and refreshes the portfolio when a stop loss fires', async () => {
         tradingDb.positions = [buildPosition({ symbol: 'AAPL', quantity: 2 })];
         tradingDb.prices = [buildPriceTick({ symbol: 'AAPL', price: 100 })];

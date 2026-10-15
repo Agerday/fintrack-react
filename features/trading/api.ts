@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import type { OrderFormValues, PendingOrderFormValues } from './schema';
+import type { OcoOrderFormValues, OrderFormValues, PendingOrderFormValues } from './schema';
 import type { Order, PendingOrder, Position } from './types';
 
 export function getPositions() {
@@ -24,6 +24,15 @@ export function getPendingOrders() {
 
 export function placePendingOrder(data: PendingOrderFormValues) {
     return apiClient<PendingOrder>('/trading/pending-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+}
+
+// Returns the two linked legs: stop loss first, take profit second
+export function placeOcoOrder(data: OcoOrderFormValues) {
+    return apiClient<PendingOrder[]>('/trading/pending-orders/oco', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
