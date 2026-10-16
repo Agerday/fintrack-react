@@ -16,7 +16,8 @@ type QueryStateProps = {
     children: ReactNode;
 };
 
-function DefaultSkeleton() {
+// Also the <Suspense> fallback of the pages that prefetch a list on the server
+export function ListSkeleton() {
     return (
         <div className="space-y-3" aria-busy="true" aria-label="Loading">
             <Skeleton className="h-12 w-full" />
@@ -35,7 +36,7 @@ export function QueryState({
     loadingFallback,
     children,
 }: QueryStateProps) {
-    if (isPending) return loadingFallback ?? <DefaultSkeleton />;
+    if (isPending) return loadingFallback ?? <ListSkeleton />;
 
     if (error) {
         return (

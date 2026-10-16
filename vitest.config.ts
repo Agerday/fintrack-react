@@ -30,6 +30,11 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './'),
+            // Next resolves 'server-only' itself; tests import server modules on purpose
+            'server-only': path.resolve(
+                __dirname,
+                'node_modules/next/dist/compiled/server-only/empty.js',
+            ),
         },
     },
 });

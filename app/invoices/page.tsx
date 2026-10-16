@@ -1,26 +1,26 @@
-'use client';
-
-import { InvoiceTable } from '@/features/invoices/components/InvoiceTable';
-import { InvoiceForm } from '@/features/invoices/components/InvoiceForm';
+import { Suspense } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { FormDialog } from '@/components/shared/FormDialog';
+import { Prefetched } from '@/components/shared/Prefetched';
+import { ListSkeleton } from '@/components/shared/QueryState';
+import { CreateInvoiceDialog } from '@/features/invoices/components/CreateInvoiceDialog';
+import { InvoiceTable } from '@/features/invoices/components/InvoiceTable';
+import { listInvoices } from '@/features/invoices/queries';
 
-// Stays a Client Component: FormDialog takes a function as children, which can't cross
-// the Server -> Client boundary (only serializable props can)
+// The header is sent at once; the table streams in with its data already loaded
 export default function InvoicesPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageHeader
                 title="Invoices"
                 description="Manage and track your invoices."
-                action={
-                    <FormDialog title="Create invoice" triggerLabel="New invoice" hotkey="n">
-                        {(close) => <InvoiceForm onSuccess={close} />}
-                    </FormDialog>
-                }
+                action={<CreateInvoiceDialog />}
             />
 
-            <InvoiceTable />
+            <Suspense fallback={<ListSkeleton />}>
+                <Prefetched queries={[{ queryKey: ['invoices'], queryFn: listInvoices }]}>
+                    <InvoiceTable />
+                </Prefetched>
+            </Suspense>
         </div>
     );
 }

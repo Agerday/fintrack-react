@@ -1,26 +1,26 @@
-'use client';
-
-import { ClientTable } from '@/features/clients/components/ClientTable';
-import { ClientForm } from '@/features/clients/components/ClientForm';
+import { Suspense } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { FormDialog } from '@/components/shared/FormDialog';
+import { Prefetched } from '@/components/shared/Prefetched';
+import { ListSkeleton } from '@/components/shared/QueryState';
+import { ClientTable } from '@/features/clients/components/ClientTable';
+import { CreateClientDialog } from '@/features/clients/components/CreateClientDialog';
+import { listClients } from '@/features/clients/queries';
 
-// Stays a Client Component: FormDialog takes a function as children, which can't cross
-// the Server -> Client boundary (only serializable props can)
+// The header is sent at once; the table streams in with its data already loaded
 export default function ClientsPage() {
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageHeader
                 title="Clients"
                 description="Manage your clients and their billing information."
-                action={
-                    <FormDialog title="Create client" triggerLabel="New client" hotkey="n">
-                        {(close) => <ClientForm onSuccess={close} />}
-                    </FormDialog>
-                }
+                action={<CreateClientDialog />}
             />
 
-            <ClientTable />
+            <Suspense fallback={<ListSkeleton />}>
+                <Prefetched queries={[{ queryKey: ['clients'], queryFn: listClients }]}>
+                    <ClientTable />
+                </Prefetched>
+            </Suspense>
         </div>
     );
 }

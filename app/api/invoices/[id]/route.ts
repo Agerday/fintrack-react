@@ -3,6 +3,7 @@ import { accountStore } from '@/app/api/account/store';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { paymentTransaction } from '@/features/account/rules';
 import { invoiceUpdateSchema } from '@/features/invoices/schema';
+import { findInvoice } from '@/features/invoices/queries';
 import {
     canChangeStatus,
     canDeleteInvoice,
@@ -19,8 +20,7 @@ import type { InvoiceEvent } from '@/features/invoices/types';
 export const GET = withErrorHandling(
     async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
         const { id } = await params;
-        const invoice = findOrThrow(invoiceStore.invoices, id, 'Invoice');
-        return NextResponse.json(invoice);
+        return NextResponse.json(findInvoice(id));
     },
 );
 

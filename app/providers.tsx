@@ -1,29 +1,15 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
-import { ApiError } from '@/lib/api-error';
+import { makeQueryClient } from '@/lib/query-client';
 import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-    const [queryClient] = useState(
-        () =>
-            new QueryClient({
-                defaultOptions: {
-                    queries: {
-                        retry: (failureCount, error) => {
-                            if (error instanceof ApiError) {
-                                // Never retry client errors — retrying won't fix a 404 or 401
-                                if (error.status === 404 || error.status === 401) return false;
-                            }
-                            // Retry other errors (network, 500) up to 2 times
-                            return failureCount < 2;
-                        },
-                    },
-                },
-            }),
-    );
+    // useState, not a module constant: created once per mount, never shared between requests
+    // during server rendering
+    const [queryClient] = useState(makeQueryClient);
 
     // After hydration, so the first client render matches the server (see the store)
     useEffect(() => {

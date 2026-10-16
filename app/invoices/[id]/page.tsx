@@ -1,10 +1,15 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Prefetched } from '@/components/shared/Prefetched';
 import { InvoiceDetail } from '@/features/invoices/components/InvoiceDetail';
+import { findInvoice } from '@/features/invoices/queries';
 
-// Server Component: only reads the route param, the client-side fetching lives in InvoiceDetail
+// Server Component: the invoice is read on the server and streams in already loaded. An unknown
+// id is not prefetched: InvoiceDetail fetches it and shows the 404
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
@@ -20,7 +25,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
             <PageHeader title={`Invoice ${id}`} description="Invoice details." />
 
-            <InvoiceDetail id={id} />
+            <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+                <Prefetched
+                    queries={[{ queryKey: ['invoice', id], queryFn: () => findInvoice(id) }]}
+                >
+                    <InvoiceDetail id={id} />
+                </Prefetched>
+            </Suspense>
         </div>
     );
 }

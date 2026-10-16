@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { invoiceSchema } from '@/features/invoices/schema';
 import { createInvoice } from '@/features/invoices/rules';
+import { listInvoices } from '@/features/invoices/queries';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { parseBody } from '@/lib/parse-body';
 import { publishEvent } from '@/lib/realtime';
 import type { InvoiceEvent } from '@/features/invoices/types';
 
 export async function GET() {
-    return NextResponse.json(invoiceStore.invoices);
+    return NextResponse.json(listInvoices());
 }
 
 export const POST = withErrorHandling(async (request: Request) => {

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { accountStore } from '@/app/api/account/store';
-import { toAccount } from '@/features/account/rules';
+import { readAccount } from '@/features/account/queries';
 
 export async function GET() {
-    return NextResponse.json(toAccount(accountStore.transactions));
+    return NextResponse.json(readAccount());
 }

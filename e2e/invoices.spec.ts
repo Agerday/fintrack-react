@@ -22,6 +22,21 @@ test.describe('Invoices', () => {
         await expect(invoicesPage.row(client)).toContainText('Pending');
     });
 
+    test('sends the invoices already rendered in the HTML, before any JavaScript runs', async ({
+        page,
+        client,
+        createInvoice,
+    }) => {
+        const invoice = await createInvoice();
+
+        // The raw server response: no browser, so no client-side fetch could fill the table
+        const list = await (await page.request.get('/invoices')).text();
+        const detail = await (await page.request.get(`/invoices/${invoice.id}`)).text();
+
+        expect(list).toContain(client);
+        expect(detail).toContain(client);
+    });
+
     test('marks an invoice as paid', async ({ client, createInvoice, invoicesPage }) => {
         await createInvoice();
         await invoicesPage.goto();

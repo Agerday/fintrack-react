@@ -3,13 +3,13 @@ import { clientStore } from '@/app/api/clients/store';
 import { invoiceStore } from '@/app/api/invoices/store';
 import { clientSchema } from '@/features/clients/schema';
 import { createClient, emailExists, withInvoiceStats } from '@/features/clients/rules';
+import { listClients } from '@/features/clients/queries';
 import { withErrorHandling } from '@/lib/with-error-handling';
 import { parseBody } from '@/lib/parse-body';
 import { HttpError } from '@/lib/http-error';
 
-// Computed on every read from the current invoices
 export async function GET() {
-    return NextResponse.json(withInvoiceStats(clientStore.clients, invoiceStore.invoices));
+    return NextResponse.json(listClients());
 }
 
 export const POST = withErrorHandling(async (request: Request) => {

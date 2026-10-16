@@ -12,6 +12,11 @@ import { useMarketStore } from '@/lib/store/useMarketStore';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { useNotificationPreferencesStore } from '@/lib/store/useNotificationPreferencesStore';
 import { defaultNotificationPreferences } from '@/features/notifications/rules';
+import { clearSharedStores } from '@/lib/shared-store';
+
+// Runs before each test file imports its modules: the Route Handlers it loads get freshly seeded
+// stores, even when the worker process (and its globalThis) ran another file before
+clearSharedStores();
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 
