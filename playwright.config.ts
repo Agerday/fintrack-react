@@ -13,7 +13,9 @@ export default defineConfig({
     // Fail the CI build if a test.only was committed by mistake
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined,
+    // Locally, the default (half the cores) runs so many browsers next to the dev server that
+    // pages hydrate slower than the timeouts: 4 is faster overall and stable
+    workers: process.env.CI ? 1 : 4,
     // 'list' prints progress in the terminal, 'html' builds a report: npx playwright show-report
     reporter: [['list'], ['html', { open: 'never' }]],
     // Assertions retry for 5s by default. The Next DEV server compiles and renders pages on
