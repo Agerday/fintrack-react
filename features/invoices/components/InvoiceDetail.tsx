@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { InvoiceActions } from './InvoiceActions';
-import { useInvoice, useInvoiceEvents } from '@/features/invoices/hooks';
+import { useInvoice, useInvoiceEvents, useOptimisticPayment } from '@/features/invoices/hooks';
 import { QueryState } from '@/components/shared/QueryState';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,7 +15,11 @@ type InvoiceDetailProps = {
 
 export function InvoiceDetail({ id }: InvoiceDetailProps) {
     const router = useRouter();
-    const { data: invoice, isPending, error, refetch } = useInvoice(id);
+    const { data, isPending, error, refetch } = useInvoice(id);
+    const {
+        invoices: [invoice],
+        markAsPaid,
+    } = useOptimisticPayment(data ? [data] : []);
     useInvoiceEvents();
 
     return (
@@ -54,6 +58,7 @@ export function InvoiceDetail({ id }: InvoiceDetailProps) {
                         <div className="w-full sm:w-auto">
                             <InvoiceActions
                                 invoice={invoice}
+                                onMarkAsPaid={() => markAsPaid(invoice.id)}
                                 variant="full"
                                 onDeleted={() => router.push('/invoices')}
                             />

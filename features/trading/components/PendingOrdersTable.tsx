@@ -1,7 +1,7 @@
 'use client';
 
 import { BellRing, X } from 'lucide-react';
-import { useCancelPendingOrder } from '../hooks';
+import { useOptimisticCancel } from '../hooks';
 import { changeRatio, pendingOrderLabels } from '../rules';
 import type { PendingOrder } from '../types';
 import { PendingOrderBadge } from './PendingOrderBadge';
@@ -47,18 +47,16 @@ const columns: Column<PendingOrderRow>[] = [
 
 type CancelButtonProps = {
     pending: PendingOrder;
+    onCancel: () => void;
 };
 
-function CancelButton({ pending }: CancelButtonProps) {
-    const { mutate, isPending } = useCancelPendingOrder();
-
+function CancelButton({ pending, onCancel }: CancelButtonProps) {
     return (
         <Button
             variant="ghost"
             size="icon-sm"
             aria-label={`Cancel ${pendingOrderLabels[pending.type].toLowerCase()} on ${pending.symbol}`}
-            disabled={isPending}
-            onClick={() => mutate(pending.id)}
+            onClick={onCancel}
         >
             <X />
         </Button>
@@ -69,8 +67,9 @@ type PendingOrdersTableProps = {
     pendingOrders: PendingOrder[];
 };
 
-export function PendingOrdersTable({ pendingOrders }: PendingOrdersTableProps) {
+export function PendingOrdersTable(props: PendingOrdersTableProps) {
     const market = useMarketPrices();
+    const { pendingOrders, cancel } = useOptimisticCancel(props.pendingOrders);
 
     if (!pendingOrders.length) {
         return (
@@ -95,7 +94,9 @@ export function PendingOrdersTable({ pendingOrders }: PendingOrdersTableProps) {
             columns={columns}
             data={rows}
             rowKey="id"
-            renderActions={(pending) => <CancelButton pending={pending} />}
+            renderActions={(pending) => (
+                <CancelButton pending={pending} onCancel={() => cancel(pending)} />
+            )}
         />
     );
 }

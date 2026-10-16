@@ -72,6 +72,52 @@ describe('InvoiceTable', () => {
         ).not.toBeInTheDocument();
     });
 
+    it('shows the invoice as paid at once, before the API answers', async () => {
+        const invoice = buildInvoice({ status: 'pending' });
+        invoiceDb.invoices = [invoice];
+        let answer = () => {};
+        // Holds the request until answer(), then lets the regular handler reply
+        server.use(
+            http.patch(
+                '/api/invoices/:id',
+                () => new Promise<undefined>((resolve) => (answer = () => resolve(undefined))),
+            ),
+        );
+        const { user } = renderWithClient(<InvoiceTable />);
+
+        await user.click(
+            within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
+        );
+
+        expect(await findRow(invoice.id)).toHaveTextContent('Paid');
+        // Settle the request: React keeps every optimistic value until all pending actions end,
+        // a request left hanging would freeze the next tests' rollbacks
+        answer();
+        await waitFor(() => expect(invoiceDb.invoices[0].status).toBe('paid'));
+    });
+
+    it('puts the invoice back to pending when the API refuses the payment', async () => {
+        const invoice = buildInvoice({ status: 'pending' });
+        invoiceDb.invoices = [invoice];
+        server.use(
+            http.patch('/api/invoices/:id', () =>
+                HttpResponse.json({ message: 'Server unavailable' }, { status: 503 }),
+            ),
+        );
+        const { user } = renderWithClient(<InvoiceTable />);
+
+        await user.click(
+            within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
+        );
+
+        await waitFor(async () =>
+            expect(
+                within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
+            ).toBeInTheDocument(),
+        );
+        expect(await findRow(invoice.id)).toHaveTextContent('Pending');
+    });
+
     it('tells the user why an invoice could not be marked as paid', async () => {
         const invoice = buildInvoice({ status: 'pending' });
         invoiceDb.invoices = [invoice];

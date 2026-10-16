@@ -2,7 +2,7 @@
 
 import { Check, Trash2 } from 'lucide-react';
 import type { Invoice } from '../types';
-import { useDeleteInvoice, useUpdateInvoice } from '@/features/invoices/hooks';
+import { useDeleteInvoice } from '@/features/invoices/hooks';
 import { canDeleteInvoice } from '@/features/invoices/rules';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
@@ -11,13 +11,19 @@ import { cn } from '@/lib/utils';
 
 type InvoiceActionsProps = {
     invoice: Pick<Invoice, 'id' | 'status'>;
+    // From useOptimisticPayment in the parent, which also owns the status shown next to it
+    onMarkAsPaid: () => void;
     // compact = icon buttons for table rows, full = labeled buttons for the detail page
     variant?: 'compact' | 'full';
     onDeleted?: () => void;
 };
 
-export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: InvoiceActionsProps) {
-    const { mutate: markAsPaid, isPending: isUpdating } = useUpdateInvoice();
+export function InvoiceActions({
+    invoice,
+    onMarkAsPaid,
+    variant = 'compact',
+    onDeleted,
+}: InvoiceActionsProps) {
     const { mutate: deleteInvoice, isPending: isDeleting } = useDeleteInvoice();
     const notify = useNotificationStore((state) => state.add);
     const compact = variant === 'compact';
@@ -29,20 +35,15 @@ export function InvoiceActions({ invoice, variant = 'compact', onDeleted }: Invo
 
     return (
         <div className={cn('flex items-center justify-end gap-1', !compact && 'gap-2')}>
+            {/* Gone at once when clicked: the optimistic status is already 'paid' */}
             {invoice.status !== 'paid' && (
                 <Button
                     variant={compact ? 'ghost' : 'outline'}
                     size={compact ? 'icon-sm' : 'lg'}
-                    disabled={isUpdating}
                     aria-label="Mark as paid"
                     title="Mark as paid"
                     className={cn(!compact && 'flex-1 sm:flex-none')}
-                    onClick={() =>
-                        markAsPaid(
-                            { id: invoice.id, data: { status: 'paid' } },
-                            { onError: reportFailure(`Could not mark ${invoice.id} as paid`) },
-                        )
-                    }
+                    onClick={onMarkAsPaid}
                 >
                     <Check />
                     {!compact && 'Mark as paid'}

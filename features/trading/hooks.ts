@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { startTransition, useEffect, useOptimistic } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
     cancelPendingOrder,
@@ -9,12 +9,13 @@ import {
     placeOrder,
     placePendingOrder,
 } from './api';
-import { tradeExecutedNotification } from './rules';
+import { pendingOrderLabels, tradeExecutedNotification, withoutPendingOrder } from './rules';
 import { marketMessageSchema } from './schema';
+import type { PendingOrder } from './types';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { MARKET_WS_URL, parseEvent } from '@/lib/realtime';
 import { useMarketStore } from '@/lib/store/useMarketStore';
-import { useNotificationStore } from '@/lib/store/useNotificationStore';
+import { notifyFailure, useNotificationStore } from '@/lib/store/useNotificationStore';
 
 // A fill changes the positions, the history, the pending orders (a stop loss is consumed,
 // a sold-out asset loses the others) and the bank account
@@ -78,11 +79,37 @@ export function useCancelPendingOrder() {
 
     return useMutation({
         mutationFn: cancelPendingOrder,
-        onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['pending-orders'] }),
+        // Returned, not voided: mutateAsync then resolves once the list is refetched, which
+        // useOptimisticCancel waits for before dropping its optimistic copy
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pending-orders'] }),
         onError: (error) => {
             console.error('Failed to cancel pending order:', error);
         },
     });
+}
+
+// Cancels with an optimistic update: the order (and its OCO twin) leaves the list at once.
+// If the API fails, useOptimistic shows it again and the error goes to the notification bell.
+// Same pattern as useOptimisticPayment for invoices
+export function useOptimisticCancel(pendingOrders: PendingOrder[]) {
+    const [displayed, hide] = useOptimistic(pendingOrders, withoutPendingOrder);
+    const { mutateAsync } = useCancelPendingOrder();
+
+    function cancel(pending: PendingOrder) {
+        startTransition(async () => {
+            hide(pending.id);
+            try {
+                await mutateAsync(pending.id);
+            } catch (error) {
+                notifyFailure(
+                    `Could not cancel the ${pendingOrderLabels[pending.type].toLowerCase()} on ${pending.symbol}`,
+                    error,
+                );
+            }
+        });
+    }
+
+    return { pendingOrders: displayed, cancel };
 }
 
 // Opens the market socket while the page is mounted and feeds the live prices into

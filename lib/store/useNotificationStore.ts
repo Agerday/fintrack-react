@@ -46,6 +46,15 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     clear: () => set({ notifications: [] }),
 }));
 
+// For a failed action with no room for an inline error (table row, optimistic update)
+export function notifyFailure(title: string, error: unknown) {
+    useNotificationStore.getState().add({
+        type: 'error',
+        title,
+        message: error instanceof Error ? error.message : String(error),
+    });
+}
+
 // Derived value as a selector, not stored: it can never get out of sync with the list
 export function selectUnreadCount(state: NotificationState) {
     return state.notifications.filter((n) => !n.read).length;

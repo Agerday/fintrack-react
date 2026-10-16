@@ -6,7 +6,7 @@ import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { InvoiceActions } from './InvoiceActions';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { useInvoiceEvents, useInvoices } from '@/features/invoices/hooks';
+import { useInvoiceEvents, useInvoices, useOptimisticPayment } from '@/features/invoices/hooks';
 import { ConnectionBadge } from '@/components/shared/ConnectionBadge';
 import { QueryState } from '@/components/shared/QueryState';
 
@@ -44,7 +44,8 @@ const columns: Column<Invoice>[] = [
 ];
 
 export function InvoiceTable() {
-    const { data: invoices = [], isPending, error, refetch } = useInvoices();
+    const { data = [], isPending, error, refetch } = useInvoices();
+    const { invoices, markAsPaid } = useOptimisticPayment(data);
     const status = useInvoiceEvents();
 
     return (
@@ -63,7 +64,12 @@ export function InvoiceTable() {
                 <DataTable
                     columns={columns}
                     data={invoices}
-                    renderActions={(invoice) => <InvoiceActions invoice={invoice} />}
+                    renderActions={(invoice) => (
+                        <InvoiceActions
+                            invoice={invoice}
+                            onMarkAsPaid={() => markAsPaid(invoice.id)}
+                        />
+                    )}
                 />
             </QueryState>
         </div>

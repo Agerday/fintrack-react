@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { http, HttpResponse } from 'msw';
 import { screen, waitFor, within } from '@testing-library/react';
 import { TradingDesk } from './TradingDesk';
 import { accountDb } from '@/test/msw/handlers/account';
@@ -223,6 +224,51 @@ describe('TradingDesk', () => {
         );
 
         expect(await screen.findByText('No pending orders')).toBeInTheDocument();
+    });
+
+    it('removes a cancelled order at once, before the API answers', async () => {
+        tradingDb.pendingOrders = [buildPendingOrder({ symbol: 'TSLA', type: 'take_profit' })];
+        let answer = () => {};
+        // Holds the request until answer(), then lets the regular handler reply
+        server.use(
+            http.delete(
+                '/api/trading/pending-orders/:id',
+                () => new Promise<undefined>((resolve) => (answer = () => resolve(undefined))),
+            ),
+        );
+        const { user } = renderWithClient(<TradingDesk />);
+
+        await user.click(
+            (await screen.findAllByRole('button', { name: 'Cancel take profit on TSLA' }))[0],
+        );
+
+        expect(await screen.findByText('No pending orders')).toBeInTheDocument();
+        // React keeps every optimistic value until all pending actions end: settle this one
+        answer();
+        await waitFor(() => expect(tradingDb.pendingOrders).toEqual([]));
+    });
+
+    it('shows the order again and tells the user when the cancellation fails', async () => {
+        tradingDb.pendingOrders = [buildPendingOrder({ symbol: 'TSLA', type: 'take_profit' })];
+        server.use(
+            http.delete('/api/trading/pending-orders/:id', () =>
+                HttpResponse.json({ message: 'Server unavailable' }, { status: 503 }),
+            ),
+        );
+        const { user } = renderWithClient(<TradingDesk />);
+
+        await user.click(
+            (await screen.findAllByRole('button', { name: 'Cancel take profit on TSLA' }))[0],
+        );
+
+        await waitFor(() =>
+            expect(useNotificationStore.getState().notifications).toEqual([
+                expect.objectContaining({ title: 'Could not cancel the take profit on TSLA' }),
+            ]),
+        );
+        expect(
+            await screen.findAllByRole('button', { name: 'Cancel take profit on TSLA' }),
+        ).not.toHaveLength(0);
     });
 
     it('blocks trading while the live feed is down', async () => {
