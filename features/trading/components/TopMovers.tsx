@@ -5,7 +5,7 @@ import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { assets } from '../data';
 import { useMarketFeed } from '../hooks';
 import { topMovers } from '../rules';
-import { ConnectionBadge } from './ConnectionBadge';
+import { ConnectionBadge } from '@/components/shared/ConnectionBadge';
 import { PriceChange } from './PriceChange';
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';

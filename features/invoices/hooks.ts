@@ -70,11 +70,12 @@ export function useDeleteInvoice() {
 }
 
 // Refreshes the TanStack Query cache when the server pushes an invoice event.
-// The connection itself (open, reconnect, cleanup) is handled by useWebSocket
+// The connection itself (open, reconnect, cleanup) is handled by useWebSocket. Returns its
+// status, for a "Live" badge
 export function useInvoiceEvents() {
     const queryClient = useQueryClient();
 
-    useWebSocket(WS_URL, {
+    return useWebSocket(WS_URL, {
         // Events pushed while we were disconnected are lost (the server keeps no history),
         // so after a REconnection we refetch to catch up
         onReconnect: () => refreshInvoiceLists(queryClient),

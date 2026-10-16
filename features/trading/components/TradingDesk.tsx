@@ -6,7 +6,7 @@ import { assets } from '../data';
 import { useMarketFeed, useOrders, usePendingOrders, usePositions } from '../hooks';
 import { availableCash, heldQuantity, portfolioSummary } from '../rules';
 import type { Position } from '../types';
-import { ConnectionBadge } from './ConnectionBadge';
+import { ConnectionBadge } from '@/components/shared/ConnectionBadge';
 import { OrderHistory } from './OrderHistory';
 import { OrderTicket } from './OrderTicket';
 import { PendingOrdersTable } from './PendingOrdersTable';

@@ -7,6 +7,7 @@ import { InvoiceActions } from './InvoiceActions';
 import { type Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { useInvoiceEvents, useInvoices } from '@/features/invoices/hooks';
+import { ConnectionBadge } from '@/components/shared/ConnectionBadge';
 import { QueryState } from '@/components/shared/QueryState';
 
 const columns: Column<Invoice>[] = [
@@ -44,21 +45,27 @@ const columns: Column<Invoice>[] = [
 
 export function InvoiceTable() {
     const { data: invoices = [], isPending, error, refetch } = useInvoices();
-    useInvoiceEvents();
+    const status = useInvoiceEvents();
 
     return (
-        <QueryState
-            isPending={isPending}
-            error={error}
-            onRetry={() => void refetch()}
-            isEmpty={!invoices.length}
-            emptyMessage="No invoices yet"
-        >
-            <DataTable
-                columns={columns}
-                data={invoices}
-                renderActions={(invoice) => <InvoiceActions invoice={invoice} />}
-            />
-        </QueryState>
+        <div className="space-y-3">
+            {/* Changes made in other tabs show up here while it says "Live" */}
+            <div className="flex justify-end">
+                <ConnectionBadge status={status} />
+            </div>
+            <QueryState
+                isPending={isPending}
+                error={error}
+                onRetry={() => void refetch()}
+                isEmpty={!invoices.length}
+                emptyMessage="No invoices yet"
+            >
+                <DataTable
+                    columns={columns}
+                    data={invoices}
+                    renderActions={(invoice) => <InvoiceActions invoice={invoice} />}
+                />
+            </QueryState>
+        </div>
     );
 }

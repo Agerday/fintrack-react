@@ -10,9 +10,7 @@ test.describe('Real-time updates', () => {
         const bobContext = await browser.newContext();
         const alice = new InvoicesPage(await aliceContext.newPage());
         const bob = new InvoicesPage(await bobContext.newPage());
-        // Known race: an event sent before Bob's socket is open is lost (the server keeps no
-        // history), and the page exposes no "socket open" signal to wait for. Seen only under
-        // heavy local load (--repeat-each); CI runs one worker and retries twice
+        // goto() waits for "Live": Bob's socket is open before the first event is sent
         await bob.goto();
 
         const paid = await createInvoice();

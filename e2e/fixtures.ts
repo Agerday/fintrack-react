@@ -6,11 +6,12 @@ import { MARKET_PRICES_URL } from '@/lib/realtime';
 export class InvoicesPage {
     constructor(readonly page: Page) {}
 
-    // The HTML is server-rendered, but clicks and shortcuts only work after hydration.
-    // The table is only rendered client-side after the fetch, so once visible, React runs
+    // The table arrives in the server HTML, before React hydrates: clicks and shortcuts would be
+    // lost. "Live" only shows once React runs and the event socket is open, so events pushed
+    // by other users from then on reach this page
     async goto() {
         await this.page.goto('/invoices');
-        await expect(this.page.getByRole('table')).toBeVisible();
+        await expect(this.page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
     }
 
     row(text: string) {

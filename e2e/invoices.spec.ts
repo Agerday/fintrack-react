@@ -107,8 +107,8 @@ test.describe('Mobile', () => {
 
     test('navigates with the drawer menu', async ({ page }) => {
         await page.goto('/');
-        // Rendered only after the client-side fetch: waits for hydration
-        await expect(page.getByText('Recent invoices')).toBeVisible();
+        // The dashboard is server-rendered: "Live" (the top movers socket) means React runs
+        await expect(page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
 
         await page.getByRole('button', { name: 'Open navigation' }).click();
         await page.getByRole('link', { name: 'Clients' }).click();
