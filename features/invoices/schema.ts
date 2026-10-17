@@ -1,8 +1,23 @@
 import { z } from 'zod';
 import { hasAtMostTwoDecimals } from '@/lib/money';
+import { type RawSearchParams, searchParam } from '@/lib/list-params';
 
 export const invoiceStatuses = ['paid', 'pending', 'overdue'] as const;
 export const invoiceStatusSchema = z.enum(invoiceStatuses);
+
+// The invoice list state read from the URL (?q=acme&status=paid), see lib/list-params.ts
+export const invoiceListParamsSchema = z.object({
+    q: searchParam,
+    status: z.enum(['all', ...invoiceStatuses]).catch('all'),
+});
+
+export type InvoiceListParams = z.infer<typeof invoiceListParamsSchema>;
+
+export const defaultInvoiceListParams = invoiceListParamsSchema.parse({});
+
+export function parseInvoiceListParams(searchParams: RawSearchParams): InvoiceListParams {
+    return invoiceListParamsSchema.parse(searchParams);
+}
 
 export const invoiceSchema = z.object({
     client: z.string().trim().min(1, 'Client is required'),

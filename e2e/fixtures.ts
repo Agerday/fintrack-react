@@ -9,9 +9,13 @@ export class InvoicesPage {
 
     // The table arrives in the server HTML, before React hydrates: clicks and shortcuts would be
     // lost. "Live" only shows once React runs and the event socket is open, so events pushed
-    // by other users from then on reach this page
-    async goto() {
-        await this.page.goto('/invoices');
+    // by other users from then on reach this page.
+    // Pass the test's client to open the list searched on it: the test's invoices are then on
+    // screen however many invoices the parallel tests created
+    async goto(search = '') {
+        await this.page.goto(
+            search ? `/invoices?${new URLSearchParams({ q: search })}` : '/invoices',
+        );
         await expect(this.page.getByRole('status').filter({ hasText: 'Live' })).toBeVisible();
     }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { InvoiceTable } from './InvoiceTable';
+import { defaultInvoiceListParams } from '../schema';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { server } from '@/test/msw/server';
 import { invoiceDb, invoiceEvents } from '@/test/msw/handlers/invoices';
@@ -21,7 +22,7 @@ describe('InvoiceTable', () => {
         const invoice = buildInvoice({ client: 'Acme', amount: 2400 });
         invoiceDb.invoices = [invoice, buildInvoice()];
 
-        renderWithClient(<InvoiceTable />);
+        renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         const row = await findRow(invoice.id);
         expect(row).toHaveTextContent('Acme');
@@ -34,9 +35,48 @@ describe('InvoiceTable', () => {
     });
 
     it('shows an empty state when there is no invoice', async () => {
-        renderWithClient(<InvoiceTable />);
+        renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         expect(await screen.findByText('No invoices yet')).toBeInTheDocument();
+    });
+
+    it('shows only the invoices matching the search and the status of the URL', async () => {
+        const match = buildInvoice({ client: 'Acme', status: 'pending' });
+        invoiceDb.invoices = [
+            match,
+            buildInvoice({ client: 'Acme', status: 'paid' }),
+            buildInvoice({ client: 'Globex', status: 'pending' }),
+        ];
+
+        renderWithClient(
+            <InvoiceTable params={{ ...defaultInvoiceListParams, q: 'acme', status: 'pending' }} />,
+        );
+
+        await findRow(match.id);
+        expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+        expect(screen.getByRole('searchbox', { name: 'Search invoices' })).toHaveValue('acme');
+    });
+
+    it('says when no invoice matches the search, not that there are none', async () => {
+        invoiceDb.invoices = [buildInvoice({ client: 'Acme' })];
+
+        renderWithClient(<InvoiceTable params={{ ...defaultInvoiceListParams, q: 'globex' }} />);
+
+        expect(await screen.findByText('No invoices match your search')).toBeInTheDocument();
+    });
+
+    it('links each status filter to its URL, keeping the search', async () => {
+        renderWithClient(<InvoiceTable params={{ ...defaultInvoiceListParams, q: 'acme' }} />);
+
+        const filters = await screen.findByRole('navigation', { name: 'Filter by status' });
+        expect(within(filters).getByRole('link', { name: 'Paid' })).toHaveAttribute(
+            'href',
+            '/invoices?q=acme&status=paid',
+        );
+        expect(within(filters).getByRole('link', { name: 'All' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        );
     });
 
     it('shows the invoices after a failed load once the user clicks "Try again"', async () => {
@@ -49,7 +89,7 @@ describe('InvoiceTable', () => {
                 { once: true },
             ),
         );
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(await screen.findByRole('button', { name: 'Try again' }));
 
@@ -59,7 +99,7 @@ describe('InvoiceTable', () => {
     it('marks a pending invoice as paid', async () => {
         const invoice = buildInvoice({ status: 'pending' });
         invoiceDb.invoices = [invoice];
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(
             within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
@@ -83,7 +123,7 @@ describe('InvoiceTable', () => {
                 () => new Promise<undefined>((resolve) => (answer = () => resolve(undefined))),
             ),
         );
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(
             within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
@@ -104,7 +144,7 @@ describe('InvoiceTable', () => {
                 HttpResponse.json({ message: 'Server unavailable' }, { status: 503 }),
             ),
         );
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(
             within(await findRow(invoice.id)).getByRole('button', { name: 'Mark as paid' }),
@@ -132,7 +172,7 @@ describe('InvoiceTable', () => {
         const { user } = renderWithClient(
             <>
                 <NotificationBell />
-                <InvoiceTable />
+                <InvoiceTable params={defaultInvoiceListParams} />
             </>,
         );
 
@@ -149,7 +189,7 @@ describe('InvoiceTable', () => {
     it('keeps the invoice when the user cancels the deletion', async () => {
         const invoice = buildInvoice();
         invoiceDb.invoices = [invoice];
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(
             within(await findRow(invoice.id)).getByRole('button', { name: 'Delete invoice' }),
@@ -165,7 +205,7 @@ describe('InvoiceTable', () => {
     it('deletes the invoice when the user confirms', async () => {
         const invoice = buildInvoice();
         invoiceDb.invoices = [invoice, buildInvoice()];
-        const { user } = renderWithClient(<InvoiceTable />);
+        const { user } = renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         await user.click(
             within(await findRow(invoice.id)).getByRole('button', { name: 'Delete invoice' }),
@@ -185,7 +225,7 @@ describe('InvoiceTable', () => {
         const invoice = buildInvoice({ status: 'paid' });
         invoiceDb.invoices = [invoice];
 
-        renderWithClient(<InvoiceTable />);
+        renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
 
         expect(
             within(await findRow(invoice.id)).queryByRole('button', { name: 'Delete invoice' }),
@@ -197,7 +237,7 @@ describe('InvoiceTable', () => {
             server.use(invoiceEvents.addEventListener('connection', () => resolve()));
         });
         invoiceDb.invoices = [buildInvoice()];
-        renderWithClient(<InvoiceTable />);
+        renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
         await screen.findByRole('table');
         await connected;
         const created = buildInvoice({ client: 'Stark Industries' });

@@ -3,6 +3,7 @@ import { expect, InvoicesPage, test } from './fixtures';
 test.describe('Real-time updates', () => {
     test('another user sees invoices created, paid and deleted without reloading', async ({
         browser,
+        client,
         createInvoice,
     }) => {
         // Two contexts = two isolated users, each with its own socket connection
@@ -11,12 +12,12 @@ test.describe('Real-time updates', () => {
         const alice = new InvoicesPage(await aliceContext.newPage());
         const bob = new InvoicesPage(await bobContext.newPage());
         // goto() waits for "Live": Bob's socket is open before the first event is sent
-        await bob.goto();
+        await bob.goto(client);
 
         const paid = await createInvoice();
         await expect(bob.row(paid.id)).toBeVisible();
 
-        await alice.goto();
+        await alice.goto(client);
         await alice.markAsPaid(paid.id);
         await expect(bob.row(paid.id)).toContainText('Paid');
 

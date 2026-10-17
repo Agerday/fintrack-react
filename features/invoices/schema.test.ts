@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { invoiceSchema } from './schema';
+import { invoiceSchema, parseInvoiceListParams } from './schema';
 
 function errorFor(input: unknown) {
     return invoiceSchema.safeParse(input).error?.issues[0]?.message;
@@ -28,5 +28,21 @@ describe('invoiceSchema', () => {
         expect(errorFor({ client: 'Acme', amount: 12.345 })).toBe(
             'Amount can have at most 2 decimals',
         );
+    });
+});
+
+describe('parseInvoiceListParams', () => {
+    it('falls back to the defaults for a hand-edited URL instead of failing the page', () => {
+        expect(parseInvoiceListParams({ q: ['a', 'b'], status: 'archived' })).toEqual({
+            q: '',
+            status: 'all',
+        });
+    });
+
+    it('trims the search', () => {
+        expect(parseInvoiceListParams({ q: '  acme ', status: 'paid' })).toEqual({
+            q: 'acme',
+            status: 'paid',
+        });
     });
 });

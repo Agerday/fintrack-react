@@ -6,7 +6,7 @@ test.describe('Invoices', () => {
         client,
         invoicesPage,
     }) => {
-        await invoicesPage.goto();
+        await invoicesPage.goto(client);
 
         await page.keyboard.press('n');
         const dialog = page.getByRole('dialog', { name: 'Create invoice' });
@@ -37,9 +37,28 @@ test.describe('Invoices', () => {
         expect(detail).toContain(client);
     });
 
+    test('finds an invoice by searching, and keeps the search after a reload', async ({
+        page,
+        client,
+        createInvoice,
+        invoicesPage,
+    }) => {
+        const invoice = await createInvoice();
+        await invoicesPage.goto();
+
+        await page.getByRole('searchbox', { name: 'Search invoices' }).fill(client);
+        await page.keyboard.press('Enter');
+
+        await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(client);
+        await expect(page.getByRole('table').getByRole('row')).toHaveCount(2);
+        await page.reload();
+        await expect(invoicesPage.row(invoice.id)).toBeVisible();
+        await expect(page.getByRole('searchbox', { name: 'Search invoices' })).toHaveValue(client);
+    });
+
     test('marks an invoice as paid', async ({ client, createInvoice, invoicesPage }) => {
         await createInvoice();
-        await invoicesPage.goto();
+        await invoicesPage.goto(client);
 
         await invoicesPage.markAsPaid(client);
 
@@ -53,7 +72,7 @@ test.describe('Invoices', () => {
         invoicesPage,
     }) => {
         await createInvoice(137);
-        await invoicesPage.goto();
+        await invoicesPage.goto(client);
 
         await invoicesPage.markAsPaid(client);
         await expect(invoicesPage.row(client)).toContainText('Paid');
@@ -72,7 +91,7 @@ test.describe('Invoices', () => {
         invoicesPage,
     }) => {
         const invoice = await createInvoice(42);
-        await invoicesPage.goto();
+        await invoicesPage.goto(client);
 
         await invoicesPage.row(client).getByRole('link', { name: invoice.id }).click();
 
@@ -88,7 +107,7 @@ test.describe('Invoices', () => {
         invoicesPage,
     }) => {
         await createInvoice();
-        await invoicesPage.goto();
+        await invoicesPage.goto(client);
 
         await invoicesPage.delete(client);
 

@@ -5,9 +5,13 @@ import { ListSkeleton } from '@/components/shared/QueryState';
 import { CreateInvoiceDialog } from '@/features/invoices/components/CreateInvoiceDialog';
 import { InvoiceTable } from '@/features/invoices/components/InvoiceTable';
 import { listInvoices } from '@/features/invoices/queries';
+import { parseInvoiceListParams } from '@/features/invoices/schema';
 
-// The header is sent at once; the table streams in with its data already loaded
-export default function InvoicesPage() {
+// The header is sent at once; the table streams in with its data already loaded.
+// Search and filters come from the URL, so the server HTML is already the filtered list
+export default async function InvoicesPage({ searchParams }: PageProps<'/invoices'>) {
+    const params = parseInvoiceListParams(await searchParams);
+
     return (
         <div className="space-y-6 lg:space-y-8">
             <PageHeader
@@ -18,7 +22,7 @@ export default function InvoicesPage() {
 
             <Suspense fallback={<ListSkeleton />}>
                 <Prefetched queries={[{ queryKey: ['invoices'], queryFn: listInvoices }]}>
-                    <InvoiceTable />
+                    <InvoiceTable params={params} />
                 </Prefetched>
             </Suspense>
         </div>

@@ -1,5 +1,24 @@
-import type { InvoiceFormValues } from './schema';
+import { listHref, matchesSearch } from '@/lib/list-params';
+import { defaultInvoiceListParams, type InvoiceFormValues, type InvoiceListParams } from './schema';
 import type { Invoice, InvoiceStatus } from './types';
+
+// The invoices the list shows for the URL params. Runs on the cached full list, not on the
+// server: the optimistic payment and the live events keep working on every view
+export function queryInvoices(invoices: Invoice[], params: InvoiceListParams): Invoice[] {
+    return invoices.filter(
+        (invoice) =>
+            (params.status === 'all' || invoice.status === params.status) &&
+            matchesSearch([invoice.id, invoice.client], params.q),
+    );
+}
+
+// Link to the list with some params changed, the others kept
+export function invoiceListHref(
+    params: InvoiceListParams,
+    changes: Partial<InvoiceListParams>,
+): string {
+    return listHref('/invoices', { ...params, ...changes }, defaultInvoiceListParams);
+}
 
 export function createInvoice(data: InvoiceFormValues, now: Date): Invoice {
     return {
