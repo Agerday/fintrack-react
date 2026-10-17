@@ -1,90 +1,71 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FormError, FormField } from '@/components/shared/FormField';
+import { FormField } from '@/components/shared/FormField';
 import { QueryState } from '@/components/shared/QueryState';
-import { useProfile, useUpdateProfile } from '@/features/profile/hooks';
-import { profileSchema } from '@/features/profile/schema';
-import type { ProfileFormValues } from '@/features/profile/schema';
+import { useProfile, useSaveProfile } from '@/features/profile/hooks';
 import type { Profile } from '@/features/profile/types';
-import { ApiError } from '@/lib/api-error';
 
 type ProfileFieldsProps = {
     profile: Profile;
 };
 
+// The one form built on a Server Action + useActionState instead of React Hook Form + a Route
+// Handler: validation runs on the server only, and the fields are plain uncontrolled inputs
 function ProfileFields({ profile }: ProfileFieldsProps) {
-    const {
-        register,
-        handleSubmit,
-        setError,
-        reset,
-        formState: { errors, isDirty },
-    } = useForm<ProfileFormValues>({
-        resolver: zodResolver(profileSchema),
-        defaultValues: profile,
-    });
-
-    const { mutate, isPending, isSuccess, error } = useUpdateProfile();
-
-    function onSubmit(data: ProfileFormValues) {
-        mutate(data, {
-            onSuccess: (saved) => reset(saved),
-            onError: (err) => {
-                if (err instanceof ApiError && err.field) {
-                    setError(err.field as keyof ProfileFormValues, { message: err.message });
-                }
-            },
-        });
-    }
-
-    const globalErrorMessage =
-        error instanceof ApiError && !error.field ? error.message : undefined;
+    const [state, formAction, isPending] = useSaveProfile(profile);
+    const errors = state.fieldErrors ?? {};
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        // React resets the inputs after each submit: defaultValue from the state puts back the
+        // saved profile, or what the user typed when the server rejected it
+        <form action={formAction} noValidate>
             <Card>
                 <CardContent className="space-y-5">
                     <div className="grid gap-5 sm:grid-cols-2">
-                        <FormField label="Name" htmlFor="name" error={errors.name?.message}>
-                            <Input id="name" autoComplete="name" {...register('name')} />
+                        <FormField label="Name" htmlFor="name" error={errors.name?.[0]}>
+                            <Input
+                                id="name"
+                                name="name"
+                                autoComplete="name"
+                                defaultValue={state.values.name}
+                            />
                         </FormField>
                         <FormField
                             label="Job title"
                             htmlFor="jobTitle"
-                            error={errors.jobTitle?.message}
+                            error={errors.jobTitle?.[0]}
                         >
                             <Input
                                 id="jobTitle"
+                                name="jobTitle"
                                 autoComplete="organization-title"
-                                {...register('jobTitle')}
+                                defaultValue={state.values.jobTitle}
                             />
                         </FormField>
                         <FormField
                             label="Email"
                             htmlFor="email"
-                            error={errors.email?.message}
+                            error={errors.email?.[0]}
                             className="sm:col-span-2"
                         >
                             <Input
                                 id="email"
+                                name="email"
                                 type="email"
                                 autoComplete="email"
-                                {...register('email')}
+                                defaultValue={state.values.email}
                             />
                         </FormField>
                     </div>
-                    <FormError message={globalErrorMessage} />
                 </CardContent>
 
                 <CardFooter className="justify-end gap-3 border-t">
-                    {isSuccess && !isDirty && (
+                    {state.status === 'success' && !isPending && (
                         <p
                             role="status"
                             className="flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -93,7 +74,7 @@ function ProfileFields({ profile }: ProfileFieldsProps) {
                             Profile saved
                         </p>
                     )}
-                    <Button type="submit" disabled={!isDirty || isPending}>
+                    <Button type="submit" disabled={isPending}>
                         {isPending ? 'Saving...' : 'Save changes'}
                     </Button>
                 </CardFooter>

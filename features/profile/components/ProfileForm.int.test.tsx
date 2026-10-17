@@ -1,12 +1,18 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
 import { ProfileForm } from './ProfileForm';
-import { server } from '@/test/msw/server';
+import { profileStore } from '@/app/api/profile/store';
 import { profileDb } from '@/test/msw/handlers/profile';
 import { renderWithClient } from '@/test/render';
 
+// Saving calls the real saveProfile Server Action, which writes the server store directly
+const storedProfile = { ...profileStore.profile };
+
 describe('ProfileForm', () => {
+    afterEach(() => {
+        profileStore.profile = { ...storedProfile };
+    });
+
     it('loads the current profile into the form', async () => {
         profileDb.profile = { name: 'Ada Lovelace', email: 'ada@example.com', jobTitle: 'CFO' };
 
@@ -26,27 +32,21 @@ describe('ProfileForm', () => {
         await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
         expect(await screen.findByRole('status')).toHaveTextContent('Profile saved');
-        expect(profileDb.profile.name).toBe('Grace Hopper');
+        expect(screen.getByLabelText('Name')).toHaveValue('Grace Hopper');
+        expect(profileStore.profile.name).toBe('Grace Hopper');
     });
 
-    it('shows a server validation error under the matching field', async () => {
-        server.use(
-            http.put('/api/profile', () =>
-                HttpResponse.json(
-                    { message: 'This domain is not allowed', field: 'email' },
-                    { status: 400 },
-                ),
-            ),
-        );
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('shows the server validation error and keeps what the user typed', async () => {
         const { user } = renderWithClient(<ProfileForm />);
         const email = await screen.findByLabelText('Email');
 
         await user.clear(email);
-        await user.type(email, 'taken@example.com');
+        await user.type(email, 'not-an-email');
         await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
-        expect(await screen.findByText('This domain is not allowed')).toBeInTheDocument();
+        expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument();
+        expect(screen.getByLabelText('Email')).toHaveValue('not-an-email');
         expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        expect(profileStore.profile).toEqual(storedProfile);
     });
 });

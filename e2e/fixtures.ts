@@ -1,5 +1,6 @@
 import { test as base, expect, type APIRequestContext, type Page } from '@playwright/test';
 import type { Invoice } from '@/features/invoices/types';
+import type { Profile } from '@/features/profile/types';
 import type { PendingOrder, Position, PriceTick } from '@/features/trading/types';
 import { MARKET_PRICES_URL } from '@/lib/realtime';
 
@@ -147,6 +148,8 @@ type Fixtures = {
     invoicesPage: InvoicesPage;
     tradingPage: TradingPage;
     trading: TradingApi;
+    // The profile is a singleton: the one before the test is saved back after it
+    profile: Profile;
 };
 
 // E2E runs against the real server: without this cleanup, test invoices stay in its store.
@@ -185,6 +188,12 @@ export const test = base.extend<Fixtures>({
         const trading = new TradingApi(request);
         await use(trading);
         await trading.cleanUp();
+    },
+
+    profile: async ({ request }, use) => {
+        const profile = (await (await request.get('/api/profile')).json()) as Profile;
+        await use(profile);
+        await request.put('/api/profile', { data: profile });
     },
 });
 

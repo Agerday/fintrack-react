@@ -12,6 +12,7 @@ const routes = [
     '/clients',
     '/account',
     '/trading',
+    '/profile',
     '/api/invoices',
     '/api/invoices/INV-WARMUP',
     '/api/clients',

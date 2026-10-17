@@ -1,22 +1,24 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProfile, updateProfile } from './api';
+import { useActionState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getProfile } from './api';
+import { saveProfile, type SaveProfileState } from './actions';
+import type { Profile } from './types';
 
 export function useProfile() {
     return useQuery({ queryKey: ['profile'], queryFn: getProfile });
 }
 
-export function useUpdateProfile() {
+// useActionState over the saveProfile Server Action: returns [state, formAction, isPending].
+// The saved profile is written to the TanStack cache, so the header shows the new name at once
+export function useSaveProfile(profile: Profile) {
     const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: updateProfile,
-        // The response is the full saved profile: write it to the cache instead of refetching,
-        // so the header shows the new name at once
-        onSuccess: (profile) => {
-            queryClient.setQueryData(['profile'], profile);
+    return useActionState(
+        async (previous: SaveProfileState, formData: FormData) => {
+            const next = await saveProfile(previous, formData);
+            if (next.status === 'success') queryClient.setQueryData(['profile'], next.values);
+            return next;
         },
-        onError: (error) => {
-            console.error('Failed to update profile:', error);
-        },
-    });
+        { status: 'idle', values: profile },
+    );
 }
