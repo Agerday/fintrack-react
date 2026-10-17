@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { invoiceSchema, parseInvoiceListParams } from './schema';
+import { defaultInvoiceListParams, invoiceSchema, parseInvoiceListParams } from './schema';
 
 function errorFor(input: unknown) {
     return invoiceSchema.safeParse(input).error?.issues[0]?.message;
@@ -33,16 +33,20 @@ describe('invoiceSchema', () => {
 
 describe('parseInvoiceListParams', () => {
     it('falls back to the defaults for a hand-edited URL instead of failing the page', () => {
-        expect(parseInvoiceListParams({ q: ['a', 'b'], status: 'archived' })).toEqual({
-            q: '',
-            status: 'all',
-        });
+        expect(
+            parseInvoiceListParams({ q: ['a', 'b'], status: 'archived', sort: 'id', page: '-2' }),
+        ).toEqual(defaultInvoiceListParams);
     });
 
-    it('trims the search', () => {
-        expect(parseInvoiceListParams({ q: '  acme ', status: 'paid' })).toEqual({
-            q: 'acme',
-            status: 'paid',
-        });
+    it('reads the search, filter, sort and page of a valid URL', () => {
+        expect(
+            parseInvoiceListParams({
+                q: '  acme ',
+                status: 'paid',
+                sort: 'amount',
+                dir: 'asc',
+                page: '3',
+            }),
+        ).toEqual({ q: 'acme', status: 'paid', sort: 'amount', dir: 'asc', page: 3 });
     });
 });

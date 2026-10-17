@@ -4,8 +4,10 @@ import {
     canEditInvoice,
     createInvoice,
     isNewPayment,
+    queryInvoices,
     recentInvoices,
 } from './rules';
+import { defaultInvoiceListParams } from './schema';
 import { buildInvoice } from '@/test/factories';
 
 describe('createInvoice', () => {
@@ -75,5 +77,19 @@ describe('recentInvoices', () => {
         ];
 
         expect(recentInvoices(invoices, 2).map(({ id }) => id)).toEqual(['INV-3', 'INV-2']);
+    });
+});
+
+describe('queryInvoices', () => {
+    it('sorts by date across the seed format and the ISO dates of new invoices', () => {
+        const invoices = [
+            buildInvoice({ id: 'INV-SEPT', date: 'Sep 30, 2026' }),
+            buildInvoice({ id: 'INV-OCT', date: '2026-10-02T09:00:00.000Z' }),
+            buildInvoice({ id: 'INV-AUG', date: 'Aug 12, 2026' }),
+        ];
+
+        const { items } = queryInvoices(invoices, defaultInvoiceListParams);
+
+        expect(items.map(({ id }) => id)).toEqual(['INV-OCT', 'INV-SEPT', 'INV-AUG']);
     });
 });

@@ -8,6 +8,10 @@ import {
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import React from 'react';
+import Link from 'next/link';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import type { SortDirection } from '@/lib/list-params';
+import { cn } from '@/lib/utils';
 
 export type Column<T> = {
     [K in keyof T]: {
@@ -15,8 +19,17 @@ export type Column<T> = {
         header: string;
         className?: string;
         render?: (value: T[K], row: T) => React.ReactNode;
+        // The header becomes a link that sorts by this column (needs the table's `sort` prop)
+        sortable?: boolean;
     };
 }[keyof T];
+
+// Sorting lives in the URL: each sortable header links to the list sorted by its column
+export type TableSort<T> = {
+    key: keyof T;
+    dir: SortDirection;
+    href: (key: keyof T) => string;
+};
 
 type DataTableProps<T> = {
     data: T[];
@@ -24,13 +37,39 @@ type DataTableProps<T> = {
     renderActions?: (row: T) => React.ReactNode;
     // Unique field used as React key, defaults to the first column
     rowKey?: keyof T;
+    sort?: TableSort<T>;
 };
 
 function renderCell<T>(column: Column<T>, row: T) {
     return column.render ? column.render(row[column.key], row) : String(row[column.key]);
 }
 
-export function DataTable<T>({ data, columns, renderActions, rowKey }: DataTableProps<T>) {
+const sortIcons = { asc: ArrowUp, desc: ArrowDown };
+
+type SortHeaderProps<T> = {
+    column: Column<T>;
+    sort: TableSort<T>;
+};
+
+function SortHeader<T>({ column, sort }: SortHeaderProps<T>) {
+    const active = sort.key === column.key;
+    const Icon = active ? sortIcons[sort.dir] : ArrowUpDown;
+    return (
+        <Link
+            href={sort.href(column.key)}
+            replace
+            scroll={false}
+            className="inline-flex items-center gap-1 hover:text-foreground"
+        >
+            {column.header}
+            <Icon aria-hidden className={cn('size-3.5', !active && 'opacity-40')} />
+        </Link>
+    );
+}
+
+const ariaSort = { asc: 'ascending', desc: 'descending' } as const;
+
+export function DataTable<T>({ data, columns, renderActions, rowKey, sort }: DataTableProps<T>) {
     // The first column is the title of the mobile card (and the default row key)
     const [titleColumn, ...detailColumns] = columns;
     const getKey = (row: T) => String(row[rowKey ?? titleColumn.key]);
@@ -43,8 +82,18 @@ export function DataTable<T>({ data, columns, renderActions, rowKey }: DataTable
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-transparent">
                             {columns.map((column) => (
-                                <TableHead key={String(column.key)} className={column.className}>
-                                    {column.header}
+                                <TableHead
+                                    key={String(column.key)}
+                                    className={column.className}
+                                    aria-sort={
+                                        sort?.key === column.key ? ariaSort[sort.dir] : undefined
+                                    }
+                                >
+                                    {sort && column.sortable ? (
+                                        <SortHeader column={column} sort={sort} />
+                                    ) : (
+                                        column.header
+                                    )}
                                 </TableHead>
                             ))}
                             {renderActions && (

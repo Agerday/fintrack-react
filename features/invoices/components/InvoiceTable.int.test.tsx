@@ -79,6 +79,43 @@ describe('InvoiceTable', () => {
         );
     });
 
+    it('shows 10 invoices per page with a link to the next one', async () => {
+        invoiceDb.invoices = Array.from({ length: 12 }, () => buildInvoice());
+
+        renderWithClient(<InvoiceTable params={defaultInvoiceListParams} />);
+
+        const pagination = await screen.findByRole('navigation', { name: 'Pagination' });
+        expect(pagination).toHaveTextContent('Page 1 of 2');
+        expect(within(pagination).getByRole('link', { name: 'Next' })).toHaveAttribute(
+            'href',
+            '/invoices?page=2',
+        );
+        expect(
+            within(pagination).queryByRole('link', { name: 'Previous' }),
+        ).not.toBeInTheDocument();
+        expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(11);
+    });
+
+    it('links the sorted column to the reverse order and the others to their own sort', async () => {
+        invoiceDb.invoices = [buildInvoice()];
+
+        renderWithClient(<InvoiceTable params={{ ...defaultInvoiceListParams, page: 2 }} />);
+
+        const table = await screen.findByRole('table');
+        expect(within(table).getByRole('columnheader', { name: 'Date' })).toHaveAttribute(
+            'aria-sort',
+            'descending',
+        );
+        expect(within(table).getByRole('link', { name: 'Date' })).toHaveAttribute(
+            'href',
+            '/invoices?dir=asc',
+        );
+        expect(within(table).getByRole('link', { name: 'Client' })).toHaveAttribute(
+            'href',
+            '/invoices?sort=client&dir=asc',
+        );
+    });
+
     it('shows the invoices after a failed load once the user clicks "Try again"', async () => {
         const invoice = buildInvoice();
         invoiceDb.invoices = [invoice];

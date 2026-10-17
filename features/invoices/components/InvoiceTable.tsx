@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import type { Invoice } from '../types';
-import { queryInvoices } from '../rules';
-import { defaultInvoiceListParams, type InvoiceListParams } from '../schema';
+import { invoiceListHref, invoiceSortHref, queryInvoices } from '../rules';
+import { defaultInvoiceListParams, type InvoiceListParams, type InvoiceSortKey } from '../schema';
 import { InvoiceStatusFilter } from './InvoiceStatusFilter';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { InvoiceActions } from './InvoiceActions';
@@ -12,6 +12,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { useInvoiceEvents, useInvoices, useOptimisticPayment } from '@/features/invoices/hooks';
 import { ConnectionBadge } from '@/components/shared/ConnectionBadge';
 import { QueryState } from '@/components/shared/QueryState';
+import { Pagination } from '@/components/shared/Pagination';
 import { SearchForm } from '@/components/shared/SearchForm';
 import { changedParams } from '@/lib/list-params';
 
@@ -28,18 +29,21 @@ const columns: Column<Invoice>[] = [
     {
         key: 'client',
         header: 'Client',
+        sortable: true,
     },
     {
         key: 'date',
         header: 'Date',
         className: 'text-muted-foreground',
         render: (value) => formatDate(value),
+        sortable: true,
     },
     {
         key: 'amount',
         header: 'Amount',
         className: 'text-right tabular-nums',
         render: (value) => formatCurrency(value),
+        sortable: true,
     },
     {
         key: 'status',
@@ -58,8 +62,9 @@ export function InvoiceTable({ params }: InvoiceTableProps) {
     const { invoices, markAsPaid } = useOptimisticPayment(data);
     const status = useInvoiceEvents();
     const shown = queryInvoices(invoices, params);
-    // The search field sends q itself, the other changed params ride along as hidden inputs
-    const keep = changedParams({ ...params, q: '' }, defaultInvoiceListParams);
+    // The search field sends q itself, the other changed params ride along as hidden inputs.
+    // Not the page: a new search starts on page 1
+    const keep = changedParams({ ...params, q: '', page: 1 }, defaultInvoiceListParams);
 
     return (
         <div className="space-y-3">
@@ -82,18 +87,29 @@ export function InvoiceTable({ params }: InvoiceTableProps) {
                 isPending={isPending}
                 error={error}
                 onRetry={() => void refetch()}
-                isEmpty={!shown.length}
+                isEmpty={!shown.items.length}
                 emptyMessage={invoices.length ? 'No invoices match your search' : 'No invoices yet'}
             >
                 <DataTable
                     columns={columns}
-                    data={shown}
+                    data={shown.items}
+                    sort={{
+                        key: params.sort,
+                        dir: params.dir,
+                        // Only the sortable columns get a link, and they are all sort keys
+                        href: (key) => invoiceSortHref(params, key as InvoiceSortKey),
+                    }}
                     renderActions={(invoice) => (
                         <InvoiceActions
                             invoice={invoice}
                             onMarkAsPaid={() => markAsPaid(invoice.id)}
                         />
                     )}
+                />
+                <Pagination
+                    page={shown.page}
+                    pageCount={shown.pageCount}
+                    href={(page) => invoiceListHref(params, { page })}
                 />
             </QueryState>
         </div>
