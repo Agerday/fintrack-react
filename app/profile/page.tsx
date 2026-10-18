@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ProfileForm } from '@/features/profile/components/ProfileForm';
+
+export const metadata: Metadata = { title: 'Profile' };
 
 export default function ProfilePage() {
     return (

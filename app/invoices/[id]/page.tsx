@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -7,6 +8,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Prefetched } from '@/components/shared/Prefetched';
 import { InvoiceDetail } from '@/features/invoices/components/InvoiceDetail';
 import { findInvoice } from '@/features/invoices/queries';
+
+// The tab title depends on the URL: generateMetadata instead of a static metadata object
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+    const { id } = await params;
+    return { title: `Invoice ${id}` };
+}
 
 // Server Component: the invoice is read on the server and streams in already loaded. An unknown
 // id is not prefetched: InvoiceDetail fetches it and shows the 404

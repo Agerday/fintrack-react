@@ -97,6 +97,7 @@ test.describe('Invoices', () => {
 
         await expect(page).toHaveURL(`/invoices/${invoice.id}`);
         await expect(page.getByRole('heading', { name: `Invoice ${invoice.id}` })).toBeVisible();
+        await expect(page).toHaveTitle(`Invoice ${invoice.id} · FinTrack`);
         await expect(page.getByText(client)).toBeVisible();
         await expect(page.getByText('$42.00')).toBeVisible();
     });

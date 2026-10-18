@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TradingDesk } from '@/features/trading/components/TradingDesk';
+
+export const metadata: Metadata = { title: 'Live trading' };
 
 export default function TradingPage() {
     return (

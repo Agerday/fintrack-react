@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NavCard } from '@/components/shared/NavCard';
 import { settingsSections } from '@/features/settings/sections';
+
+export const metadata: Metadata = { title: 'Settings' };
 
 export default function SettingsPage() {
     return (

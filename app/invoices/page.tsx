@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Prefetched } from '@/components/shared/Prefetched';
@@ -6,6 +7,8 @@ import { CreateInvoiceDialog } from '@/features/invoices/components/CreateInvoic
 import { InvoiceTable } from '@/features/invoices/components/InvoiceTable';
 import { listInvoices } from '@/features/invoices/queries';
 import { parseInvoiceListParams } from '@/features/invoices/schema';
+
+export const metadata: Metadata = { title: 'Invoices' };
 
 // The header is sent at once; the table streams in with its data already loaded.
 // Search and filters come from the URL, so the server HTML is already the filtered list

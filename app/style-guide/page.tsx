@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -43,6 +44,8 @@ function Swatch({ name, className }: { name: string; className: string }) {
         </div>
     );
 }
+
+export const metadata: Metadata = { title: 'Style guide' };
 
 export default function StyleGuidePage() {
     return (

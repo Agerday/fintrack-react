@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Construction } from 'lucide-react';
@@ -23,6 +24,16 @@ const sectionForms: Partial<Record<string, ComponentType>> = {
 
 export function generateStaticParams() {
     return settingsSections.map(({ id }) => ({ section: id }));
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ section: string }>;
+}): Promise<Metadata> {
+    const { section: id } = await params;
+    // An unknown section renders the not found page: no section name to show
+    return { title: findSettingsSection(id)?.title ?? 'Settings' };
 }
 
 export default async function SettingsSectionPage({

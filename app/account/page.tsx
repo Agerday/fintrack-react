@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AccountOverview } from '@/features/account/components/AccountOverview';
+
+export const metadata: Metadata = { title: 'Bank account' };
 
 export default function AccountPage() {
     return (
