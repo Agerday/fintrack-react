@@ -7,13 +7,27 @@ import type { StatCardProps } from '@/components/layout/StatCard';
 import { QueryState } from '@/components/shared/QueryState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useAccount } from '@/features/account/hooks';
 import { useInvoices } from '@/features/invoices/hooks';
 import { recentInvoices } from '@/features/invoices/rules';
-import { AmountByClientChart } from '@/features/dashboard/components/AmountByClientChart';
-import { CollectionRateChart } from '@/features/dashboard/components/CollectionRateChart';
 import { sumAmountByClient, sumAmountByStatus } from '@/features/dashboard/rules';
 import { TopMovers } from '@/features/trading/components/TopMovers';
+
+// Chart.js is only needed to draw on a canvas, which can't happen on the server: the charts and
+// the library load in their own chunk once the dashboard is on screen, like a lazy-loaded
+// Angular component. Same size placeholder meanwhile, so the page doesn't jump
+const chartPlaceholder = () => <Skeleton className="h-80 rounded-xl" />;
+
+const AmountByClientChart = dynamic(
+    () => import('./AmountByClientChart').then((module) => module.AmountByClientChart),
+    { ssr: false, loading: chartPlaceholder },
+);
+
+const CollectionRateChart = dynamic(
+    () => import('./CollectionRateChart').then((module) => module.CollectionRateChart),
+    { ssr: false, loading: chartPlaceholder },
+);
 
 // Only the cash balance is live for now: the other figures are still placeholders
 function buildStats(balance: number): StatCardProps[] {

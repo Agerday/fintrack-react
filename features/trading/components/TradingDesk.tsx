@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { assets } from '../data';
 import { useMarketFeed, useOrders, usePendingOrders, usePositions } from '../hooks';
 import { availableCash, heldQuantity, portfolioSummary } from '../rules';
@@ -12,13 +13,20 @@ import { OrderTicket } from './OrderTicket';
 import { PendingOrdersTable } from './PendingOrdersTable';
 import { PnlAmount } from './PnlAmount';
 import { PositionsTable } from './PositionsTable';
-import { PriceChart } from './PriceChart';
 import { Watchlist } from './Watchlist';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { QueryState } from '@/components/shared/QueryState';
 import { useAccount } from '@/features/account/hooks';
 import { formatCurrency } from '@/lib/formatters';
 import { useMarketPrices, useMarketStatus } from '@/lib/store/useMarketStore';
+
+// Chart.js loads in its own chunk once the desk is on screen: a canvas can't be drawn on the
+// server, so there is nothing to render there anyway (see DashboardOverview)
+const PriceChart = dynamic(() => import('./PriceChart').then((module) => module.PriceChart), {
+    ssr: false,
+    loading: () => <Skeleton className="h-88 rounded-xl sm:h-96" />,
+});
 
 type SummaryTileProps = {
     label: string;
