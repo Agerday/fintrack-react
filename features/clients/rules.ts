@@ -1,8 +1,37 @@
 import type { Invoice } from '@/features/invoices/types';
 import { sumAmounts } from '@/lib/money';
+import { type ListPage, listLinks, matchesSearch, paginate, sortBy } from '@/lib/list-params';
 import { countries } from './countries';
-import type { ClientFormValues } from './schema';
+import {
+    type ClientFormValues,
+    type ClientListParams,
+    type ClientSortKey,
+    defaultClientListParams,
+} from './schema';
 import type { Client, ClientRecord } from './types';
+
+export const CLIENTS_PAGE_SIZE = 10;
+
+const sortValues: Record<ClientSortKey, (client: Client) => string | number> = {
+    name: (client) => client.name,
+    invoices: (client) => client.invoices,
+    total: (client) => client.total,
+};
+
+// The page of clients the list shows for the URL params, like queryInvoices
+export function queryClients(clients: Client[], params: ClientListParams): ListPage<Client> {
+    const matching = clients.filter((client) =>
+        matchesSearch([client.name, client.email, client.company], params.q),
+    );
+    const sorted = sortBy(matching, sortValues[params.sort], params.dir);
+    return paginate(sorted, params.page, CLIENTS_PAGE_SIZE);
+}
+
+// A to Z for the name, most first for the figures
+export const { href: clientListHref, sortHref: clientSortHref } = listLinks<
+    ClientSortKey,
+    ClientListParams
+>('/clients', defaultClientListParams, { name: 'asc', invoices: 'desc', total: 'desc' });
 
 export function emailExists(clients: Pick<ClientRecord, 'email'>[], email: string): boolean {
     const normalized = email.toLowerCase();

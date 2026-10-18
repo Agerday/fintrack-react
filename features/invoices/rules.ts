@@ -1,12 +1,4 @@
-import {
-    type ListPage,
-    listHref,
-    matchesSearch,
-    nextSort,
-    paginate,
-    sortBy,
-    type SortDirection,
-} from '@/lib/list-params';
+import { type ListPage, listLinks, matchesSearch, paginate, sortBy } from '@/lib/list-params';
 import {
     defaultInvoiceListParams,
     type InvoiceFormValues,
@@ -37,25 +29,11 @@ export function queryInvoices(invoices: Invoice[], params: InvoiceListParams): L
     return paginate(sorted, params.page, INVOICES_PAGE_SIZE);
 }
 
-// Link to the list with some params changed, the others kept. Back to page 1 unless the change
-// is the page: a new filter or sort starts from the top
-export function invoiceListHref(
-    params: InvoiceListParams,
-    changes: Partial<InvoiceListParams>,
-): string {
-    return listHref('/invoices', { ...params, page: 1, ...changes }, defaultInvoiceListParams);
-}
-
 // A to Z for the client, biggest / newest first for the figures
-const firstSortDirections: Record<InvoiceSortKey, SortDirection> = {
-    date: 'desc',
-    client: 'asc',
-    amount: 'desc',
-};
-
-export function invoiceSortHref(params: InvoiceListParams, key: InvoiceSortKey): string {
-    return invoiceListHref(params, nextSort(params, key, firstSortDirections[key]));
-}
+export const { href: invoiceListHref, sortHref: invoiceSortHref } = listLinks<
+    InvoiceSortKey,
+    InvoiceListParams
+>('/invoices', defaultInvoiceListParams, { date: 'desc', client: 'asc', amount: 'desc' });
 
 export function createInvoice(data: InvoiceFormValues, now: Date): Invoice {
     return {

@@ -5,6 +5,15 @@ import { type Column, DataTable } from '@/components/ui/DataTable';
 import { formatCurrency } from '@/lib/formatters';
 import { QueryState } from '@/components/shared/QueryState';
 import { useClients } from '@/features/clients/hooks';
+import { clientListHref, clientSortHref, queryClients } from '@/features/clients/rules';
+import {
+    type ClientListParams,
+    type ClientSortKey,
+    defaultClientListParams,
+} from '@/features/clients/schema';
+import { Pagination } from '@/components/shared/Pagination';
+import { SearchForm } from '@/components/shared/SearchForm';
+import { changedParams } from '@/lib/list-params';
 
 const columns: Column<Client>[] = [
     {
@@ -20,6 +29,7 @@ const columns: Column<Client>[] = [
                 </p>
             </div>
         ),
+        sortable: true,
     },
     {
         key: 'company',
@@ -36,27 +46,62 @@ const columns: Column<Client>[] = [
         key: 'invoices',
         header: 'Invoices',
         className: 'text-right tabular-nums',
+        sortable: true,
     },
     {
         key: 'total',
         header: 'Total',
         className: 'text-right font-medium tabular-nums',
         render: (value) => formatCurrency(value),
+        sortable: true,
     },
 ];
 
-export function ClientTable() {
+type ClientTableProps = {
+    // Read from the URL by the page
+    params: ClientListParams;
+};
+
+export function ClientTable({ params }: ClientTableProps) {
     const { data: clients = [], isLoading, error, refetch } = useClients();
+    const shown = queryClients(clients, params);
+    // Not the page: a new search starts on page 1
+    const keep = changedParams({ ...params, q: '', page: 1 }, defaultClientListParams);
 
     return (
-        <QueryState
-            isPending={isLoading}
-            error={error}
-            onRetry={() => void refetch()}
-            isEmpty={!clients.length}
-            emptyMessage="No clients yet"
-        >
-            <DataTable columns={columns} data={clients} rowKey="id" />
-        </QueryState>
+        <div className="space-y-3">
+            <div className="sm:max-w-xs">
+                <SearchForm
+                    action="/clients"
+                    label="Search clients"
+                    defaultValue={params.q}
+                    keep={keep}
+                />
+            </div>
+            <QueryState
+                isPending={isLoading}
+                error={error}
+                onRetry={() => void refetch()}
+                isEmpty={!shown.items.length}
+                emptyMessage={clients.length ? 'No clients match your search' : 'No clients yet'}
+            >
+                <DataTable
+                    columns={columns}
+                    data={shown.items}
+                    rowKey="id"
+                    sort={{
+                        key: params.sort,
+                        dir: params.dir,
+                        // Only the sortable columns get a link, and they are all sort keys
+                        href: (key) => clientSortHref(params, key as ClientSortKey),
+                    }}
+                />
+                <Pagination
+                    page={shown.page}
+                    pageCount={shown.pageCount}
+                    href={(page) => clientListHref(params, { page })}
+                />
+            </QueryState>
+        </div>
     );
 }

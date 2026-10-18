@@ -38,6 +38,33 @@ export function listHref<T extends ListParams>(pathname: string, params: T, defa
     return query ? `${pathname}?${query}` : pathname;
 }
 
+type SortedListParams<Key extends string> = ListParams & {
+    sort: Key;
+    dir: SortDirection;
+    page: number;
+};
+
+// The links of one list page: params changed, the others kept. Back to page 1 unless the change
+// is the page: a new filter or sort starts from the top
+export function listLinks<Key extends string, Params extends SortedListParams<Key>>(
+    pathname: string,
+    defaults: Params,
+    // Direction a column sorts in when first clicked
+    firstDirections: Record<Key, SortDirection>,
+) {
+    function href(params: Params, changes: Partial<Params>): string {
+        return listHref(pathname, { ...params, page: 1, ...changes }, defaults);
+    }
+
+    function sortHref(params: Params, key: Key): string {
+        const sort = nextSort(params, key, firstDirections[key]);
+        // { sort, dir } is a valid change of any sorted list params
+        return href(params, sort as Partial<Params>);
+    }
+
+    return { href, sortHref };
+}
+
 // Clicking the sorted column flips its direction, clicking another one sorts by it in its
 // natural direction (newest first for a date, A to Z for a name)
 export function nextSort<Key extends string>(

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { countries, type CountryCode } from '@/features/clients/countries';
+import { pageParam, type RawSearchParams, searchParam, sortParams } from '@/lib/list-params';
 
 const countryCodes = countries.map((c) => c.code) as [CountryCode, ...CountryCode[]];
 
@@ -12,3 +13,23 @@ export const clientSchema = z.object({
 });
 
 export type ClientFormValues = z.infer<typeof clientSchema>;
+
+export const clientSortKeys = ['name', 'invoices', 'total'] as const;
+
+export type ClientSortKey = (typeof clientSortKeys)[number];
+
+// The client list state read from the URL (?q=acme&sort=total&page=2), see lib/list-params.ts.
+// A to Z by default
+export const clientListParamsSchema = z.object({
+    q: searchParam,
+    ...sortParams(clientSortKeys, 'name', 'asc'),
+    page: pageParam,
+});
+
+export type ClientListParams = z.infer<typeof clientListParamsSchema>;
+
+export const defaultClientListParams = clientListParamsSchema.parse({});
+
+export function parseClientListParams(searchParams: RawSearchParams): ClientListParams {
+    return clientListParamsSchema.parse(searchParams);
+}
