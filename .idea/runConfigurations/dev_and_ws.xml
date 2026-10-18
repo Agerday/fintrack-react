@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="dev + ws" type="CompoundRunConfigurationType">
+    <toRun name="dev" type="js.build_tools.npm" />
+    <toRun name="ws" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>
